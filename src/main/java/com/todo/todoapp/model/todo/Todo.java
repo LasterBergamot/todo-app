@@ -1,8 +1,13 @@
 package com.todo.todoapp.model.todo;
 
+import org.springframework.data.annotation.Id;
+
 import java.time.LocalDate;
 
 public class Todo {
+
+    @Id
+    private String id;
 
     private String name;
     private LocalDate deadLine;
