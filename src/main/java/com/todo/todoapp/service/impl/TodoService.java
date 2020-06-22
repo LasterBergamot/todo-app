@@ -79,7 +79,7 @@ public class TodoService implements ITodoService {
     //TODO: create a new Todo object instead of modifying the already existing one?
     private Todo updateTodo(Todo todoFromRepo, Todo todoFromJSON) {
         todoFromRepo.setName(todoFromJSON.getName());
-        todoFromRepo.setDeadLine(todoFromJSON.getDeadLine());
+        todoFromRepo.setDeadline(todoFromJSON.getDeadline());
         todoFromRepo.setPriority(todoFromJSON.getPriority());
 
         return todoFromRepo;
