@@ -11,6 +11,15 @@ import java.util.List;
 @RestController
 public class TodoRestController {
 
+    private static final String GET_MAPPING_TODOS = "/todos";
+    private static final String GET_MAPPING_TODOS_WITH_TODO_ID_PATHVAR = "/todos/{todoId}";
+
+    private static final String POST_MAPPING_TODOS = "/todos";
+
+    private static final String PUT_MAPPING_TODOS_WITH_TODO_ID_PATHVAR = "/todos/{todoId}";
+
+    private static final String DELETE_MAPPING_TODOS_WITH_TODO_ID_PATHVAR = "/todos/{todoId}";
+
     private final ITodoService todoService;
 
     @Autowired
@@ -18,27 +27,27 @@ public class TodoRestController {
         this.todoService = todoService;
     }
 
-    @GetMapping("/todos")
+    @GetMapping(GET_MAPPING_TODOS)
     public ResponseEntity<List<Todo>> getTodos() {
         return todoService.getTodos();
     }
 
-    @GetMapping("/todos/{todoId}")
+    @GetMapping(GET_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)
     public ResponseEntity<Object> getTodo(@PathVariable String todoId) {
         return todoService.getTodo(todoId);
     }
 
-    @PostMapping("/todos")
+    @PostMapping(POST_MAPPING_TODOS)
     public ResponseEntity<Object> saveTodo(@RequestBody Todo todo) {
         return todoService.saveTodo(todo);
     }
 
-    @PutMapping("/todos/{todoId}")
+    @PutMapping(PUT_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)
     public ResponseEntity<Object> updateTodo(@PathVariable String todoId, @RequestBody Todo todo) {
         return todoService.updateTodo(todoId, todo);
     }
 
-    @DeleteMapping("/todos/{todoId}")
+    @DeleteMapping(DELETE_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)
     public ResponseEntity<Object> deleteTodo(@PathVariable String todoId) {
         return todoService.deleteTodo(todoId);
     }

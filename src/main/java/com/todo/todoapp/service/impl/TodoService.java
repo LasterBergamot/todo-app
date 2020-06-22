@@ -15,6 +15,10 @@ import java.util.Optional;
 @Service
 public class TodoService implements ITodoService {
 
+    private static final String ERROR_MESSAGE_NULL_ID = "The given id was null!";
+    private static final String ERROR_MESSAGE_NULL_OR_EMPTY_JSON = "The given JSON was null or empty!";
+    private static final String ERROR_MESSAGE_NOT_EXISTING_ID = "No Todo was found with the given id!";
+
     private final TodoRepository todoRepository;
 
     @Autowired
@@ -41,22 +45,21 @@ public class TodoService implements ITodoService {
     }
 
     @Override
-    public ResponseEntity<Object> saveTodo(Todo todo) {
-
-        if (ObjectUtils.isEmpty(todo)) {
+    public ResponseEntity<Object> saveTodo(Todo todoFromJSON) {
+        if (ObjectUtils.isEmpty(todoFromJSON)) {
             return getResponseEntityForEmptyOrNullJSON();
         }
 
-        todoRepository.save(todo);
+        todoRepository.save(todoFromJSON);
 
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @Override
-    public ResponseEntity<Object> updateTodo(String todoId, Todo todo) {
+    public ResponseEntity<Object> updateTodo(String todoId, Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
             return getResponseEntityForNullId();
-        } else if (ObjectUtils.isEmpty(todo)) {
+        } else if (ObjectUtils.isEmpty(todoFromJSON)) {
             return getResponseEntityForEmptyOrNullJSON();
         }
 
@@ -64,17 +67,22 @@ public class TodoService implements ITodoService {
         ResponseEntity<Object> responseEntity = getResponseEntityForNonExistingId();
 
         if (optionalTodo.isPresent()) {
-            Todo todoFromRepo = optionalTodo.get();
-            todoFromRepo.setName(todo.getName());
-            todoFromRepo.setDeadLine(todo.getDeadLine());
-            todoFromRepo.setPriority(todo.getPriority());
-
-            todoRepository.save(todoFromRepo);
+            todoRepository.save(updateTodo(optionalTodo.get(), todoFromJSON));
 
             responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
         }
 
         return responseEntity;
+    }
+
+    //TODO: create a util class for this?
+    //TODO: create a new Todo object instead of modifying the already existing one?
+    private Todo updateTodo(Todo todoFromRepo, Todo todoFromJSON) {
+        todoFromRepo.setName(todoFromJSON.getName());
+        todoFromRepo.setDeadLine(todoFromJSON.getDeadLine());
+        todoFromRepo.setPriority(todoFromJSON.getPriority());
+
+        return todoFromRepo;
     }
 
     @Override
@@ -89,14 +97,14 @@ public class TodoService implements ITodoService {
     }
 
     private ResponseEntity<Object> getResponseEntityForNullId() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_ID);
     }
 
     private ResponseEntity<Object> getResponseEntityForEmptyOrNullJSON() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given JSON was null or empty!");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
     }
 
     private ResponseEntity<Object> getResponseEntityForNonExistingId() {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo was found with the given id!");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERROR_MESSAGE_NOT_EXISTING_ID);
     }
 }
