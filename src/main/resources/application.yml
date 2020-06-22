@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: todo-app
+  data:
+    mongodb:
+      host: mongodb # by default, mongodb is referred as localhost, but while it's in a container, localhost won't point to it, so the container's name should be given here
