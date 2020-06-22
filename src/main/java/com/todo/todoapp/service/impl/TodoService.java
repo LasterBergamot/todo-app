@@ -30,21 +30,21 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> getTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+            return getResponseEntityForNullId();
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
 
         return optionalTodo
                 .<ResponseEntity<Object>>map(todo -> ResponseEntity.status(HttpStatus.OK).body(todo))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo exists with the given id!"));
+                .orElseGet(this::getResponseEntityForNonExistingId);
     }
 
     @Override
     public ResponseEntity<Object> saveTodo(Todo todo) {
 
         if (ObjectUtils.isEmpty(todo)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given JSON was null or empty!");
+            return getResponseEntityForEmptyOrNullJSON();
         }
 
         todoRepository.save(todo);
@@ -54,15 +54,14 @@ public class TodoService implements ITodoService {
 
     @Override
     public ResponseEntity<Object> updateTodo(String todoId, Todo todo) {
-
         if (ObjectUtils.isEmpty(todoId)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+            return getResponseEntityForNullId();
         } else if (ObjectUtils.isEmpty(todo)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given JSON was null or empty!");
+            return getResponseEntityForEmptyOrNullJSON();
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        ResponseEntity<Object> responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo was found with the given id!");
+        ResponseEntity<Object> responseEntity = getResponseEntityForNonExistingId();
 
         if (optionalTodo.isPresent()) {
             Todo todoFromRepo = optionalTodo.get();
@@ -81,11 +80,23 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> deleteTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+            return getResponseEntityForNullId();
         }
 
         todoRepository.deleteById(todoId);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private ResponseEntity<Object> getResponseEntityForNullId() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+    }
+
+    private ResponseEntity<Object> getResponseEntityForEmptyOrNullJSON() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given JSON was null or empty!");
+    }
+
+    private ResponseEntity<Object> getResponseEntityForNonExistingId() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo was found with the given id!");
     }
 }
