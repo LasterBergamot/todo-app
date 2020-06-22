@@ -2,6 +2,7 @@ package com.todo.todoapp.controller.rest;
 
 import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.repository.TodoRepository;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,19 +27,17 @@ public class TodoRestController {
     }
 
     @GetMapping("/todos/{todoId}")
-    public ResponseEntity<Todo> getTodo(@PathVariable(required = false) String todoId) {
-        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        ResponseEntity responseEntity = ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body("No Todo exists with the given id!");
+    public ResponseEntity getTodo(@PathVariable(required = false) String todoId) {
 
-        if (optionalTodo.isPresent()) {
-            responseEntity = ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(optionalTodo.get());
+        if (ObjectUtils.isEmpty(todoId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The given id was null!");
         }
 
-        return responseEntity;
+        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+
+        return optionalTodo.isPresent()
+                ? ResponseEntity.status(HttpStatus.OK).body(optionalTodo.get())
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo exists with the given id!");
     }
 
     @PostMapping("/todos")
