@@ -27,24 +27,24 @@ public class TodoRestController {
     }
 
     @GetMapping("/todos/{todoId}")
-    public ResponseEntity getTodo(@PathVariable(required = false) String todoId) {
+    public ResponseEntity<Object> getTodo(@PathVariable(required = false) String todoId) {
 
         if (ObjectUtils.isEmpty(todoId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The given id was null!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
 
-        return optionalTodo.isPresent()
-                ? ResponseEntity.status(HttpStatus.OK).body(optionalTodo.get())
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo exists with the given id!");
+        return optionalTodo
+                .<ResponseEntity<Object>>map(todo -> ResponseEntity.status(HttpStatus.OK).body(todo))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo exists with the given id!"));
     }
 
     @PostMapping("/todos")
-    public ResponseEntity saveTodo(@RequestBody Todo todo) {
+    public ResponseEntity<Object> saveTodo(@RequestBody Todo todo) {
 
         if (ObjectUtils.isEmpty(todo)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The given JSON was null or empty!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given JSON was null or empty!");
         }
 
         todoRepository.save(todo);
@@ -53,9 +53,16 @@ public class TodoRestController {
     }
 
     @PutMapping("/todos/{todoId}")
-    public ResponseEntity updateTodo(@PathVariable String todoId, @RequestBody Todo todo) {
+    public ResponseEntity<Object> updateTodo(@PathVariable String todoId, @RequestBody Todo todo) {
+
+        if (ObjectUtils.isEmpty(todoId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+        } else if (ObjectUtils.isEmpty(todo)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given JSON was null or empty!");
+        }
+
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+        ResponseEntity<Object> responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Todo was found with the given id!");
 
         if (optionalTodo.isPresent()) {
             Todo todoFromRepo = optionalTodo.get();
@@ -65,14 +72,19 @@ public class TodoRestController {
 
             todoRepository.save(todoFromRepo);
 
-            httpStatus = HttpStatus.OK;
+            responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
         }
 
-        return new ResponseEntity<>(httpStatus);
+        return responseEntity;
     }
 
     @DeleteMapping("/todos/{todoId}")
-    public ResponseEntity deleteTodo(@PathVariable String todoId) {
+    public ResponseEntity<Object> deleteTodo(@PathVariable String todoId) {
+
+        if (ObjectUtils.isEmpty(todoId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
+        }
+
         todoRepository.deleteById(todoId);
 
         return new ResponseEntity<>(HttpStatus.OK);
