@@ -27,7 +27,7 @@ public class TodoRestController {
     }
 
     @GetMapping("/todos/{todoId}")
-    public ResponseEntity<Object> getTodo(@PathVariable(required = false) String todoId) {
+    public ResponseEntity<Object> getTodo(@PathVariable String todoId) {
 
         if (ObjectUtils.isEmpty(todoId)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The given id was null!");
