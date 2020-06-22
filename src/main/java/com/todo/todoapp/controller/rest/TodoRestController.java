@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-import static com.todo.todoapp.model.todo.Todo.DEFAULT_TODO;
-
 @RestController
 public class TodoRestController {
 
@@ -30,15 +28,17 @@ public class TodoRestController {
     @GetMapping("/todos/{todoId}")
     public ResponseEntity<Todo> getTodo(@PathVariable(required = false) String todoId) {
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        Todo returnedTodo = DEFAULT_TODO;
-        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+        ResponseEntity responseEntity = ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("No Todo exists with the given id!");
 
         if (optionalTodo.isPresent()) {
-            returnedTodo = optionalTodo.get();
-            httpStatus = HttpStatus.OK;
+            responseEntity = ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(optionalTodo.get());
         }
 
-        return new ResponseEntity<>(returnedTodo, httpStatus);
+        return responseEntity;
     }
 
     @PostMapping("/todos")

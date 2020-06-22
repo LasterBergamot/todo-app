@@ -13,8 +13,6 @@ public class Todo {
     private LocalDate deadLine;
     private Priority priority;
 
-    public static final Todo DEFAULT_TODO = new Todo("Default Todo", LocalDate.EPOCH, Priority.SMALL);
-
     public Todo() {}
 
     public Todo(String name, Priority priority) {
