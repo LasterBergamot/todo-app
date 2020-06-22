@@ -13,6 +13,8 @@ public class Todo {
     private LocalDate deadLine;
     private Priority priority;
 
+    public Todo() {}
+
     public Todo(String name, Priority priority) {
         this(name, LocalDate.EPOCH, priority);
     }
