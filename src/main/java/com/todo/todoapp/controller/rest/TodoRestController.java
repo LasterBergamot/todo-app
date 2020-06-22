@@ -42,6 +42,11 @@ public class TodoRestController {
 
     @PostMapping("/todos")
     public ResponseEntity saveTodo(@RequestBody Todo todo) {
+
+        if (ObjectUtils.isEmpty(todo)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The given JSON was null or empty!");
+        }
+
         todoRepository.save(todo);
 
         return new ResponseEntity<>(HttpStatus.CREATED);
