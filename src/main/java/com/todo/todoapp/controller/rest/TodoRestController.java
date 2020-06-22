@@ -1,13 +1,76 @@
 package com.todo.todoapp.controller.rest;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.todo.todoapp.model.todo.Todo;
+import com.todo.todoapp.repository.TodoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+import static com.todo.todoapp.model.todo.Todo.DEFAULT_TODO;
 
 @RestController
 public class TodoRestController {
 
-    @GetMapping("/todos/helloworld")
-    public String helloWorld() {
-        return "helloWorld";
+    private final TodoRepository todoRepository;
+
+    @Autowired
+    public TodoRestController(TodoRepository todoRepository) {
+        this.todoRepository = todoRepository;
+    }
+
+    @GetMapping("/todos")
+    public ResponseEntity<List<Todo>> getTodos() {
+        return new ResponseEntity<>(todoRepository.findAll(), HttpStatus.OK);
+    }
+
+    @GetMapping("/todos/{todoId}")
+    public ResponseEntity<Todo> getTodo(@PathVariable(required = false) String todoId) {
+        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        Todo returnedTodo = DEFAULT_TODO;
+        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+
+        if (optionalTodo.isPresent()) {
+            returnedTodo = optionalTodo.get();
+            httpStatus = HttpStatus.OK;
+        }
+
+        return new ResponseEntity<>(returnedTodo, httpStatus);
+    }
+
+    @PostMapping("/todos")
+    public ResponseEntity saveTodo(@RequestBody Todo todo) {
+        todoRepository.save(todo);
+
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @PutMapping("/todos/{todoId}")
+    public ResponseEntity updateTodo(@PathVariable String todoId, @RequestBody Todo todo) {
+        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+
+        if (optionalTodo.isPresent()) {
+            Todo todoFromRepo = optionalTodo.get();
+            todoFromRepo.setName(todo.getName());
+            todoFromRepo.setDeadLine(todo.getDeadLine());
+            todoFromRepo.setPriority(todo.getPriority());
+
+            todoRepository.save(todoFromRepo);
+
+            httpStatus = HttpStatus.OK;
+        }
+
+        return new ResponseEntity<>(httpStatus);
+    }
+
+    @DeleteMapping("/todos/{todoId}")
+    public ResponseEntity deleteTodo(@PathVariable String todoId) {
+        todoRepository.deleteById(todoId);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
