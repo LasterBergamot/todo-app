@@ -6,8 +6,6 @@ services:
     ports:
     - 27017:27017
     command: --smallfiles
-    volumes:
-      - ./logs/mongodb_logs:/home/logs/
 
   app:
     image: laster/todo-app
@@ -16,4 +14,4 @@ services:
     links:
       - mongodb
     volumes:
-      - ./logs/todo-app_logs:/home/logs/
+      - ./logs/todo-app_logs/:/todo-app/logs/todo-app_logs/ # the path inside the container must be an absolute path
