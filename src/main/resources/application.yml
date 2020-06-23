@@ -1,6 +1,17 @@
 spring:
+  profiles:
+    active: prod
   application:
     name: todo-app
   data:
     mongodb:
       host: mongodb # by default, mongodb is referred as localhost, but while it's in a container, localhost won't point to it, so the container's name should be given here
+
+logging:
+  level:
+    org.springframework: ERROR
+    com.todo.todoapp: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
+    file: "%d %p %c{1.} [%t] %m%n"
+  file: ./logs/todo-app_logs/
