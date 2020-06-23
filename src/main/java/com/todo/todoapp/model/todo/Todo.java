@@ -10,7 +10,7 @@ public class Todo {
     private String id;
 
     private String name;
-    private LocalDate deadLine;
+    private LocalDate deadline;
     private Priority priority;
 
     public Todo() {}
@@ -19,9 +19,9 @@ public class Todo {
         this(name, LocalDate.EPOCH, priority);
     }
 
-    public Todo(String name, LocalDate deadLine, Priority priority) {
+    public Todo(String name, LocalDate deadline, Priority priority) {
         this.name = name;
-        this.deadLine = deadLine;
+        this.deadline = deadline;
         this.priority = priority;
     }
 
@@ -33,12 +33,12 @@ public class Todo {
         this.name = name;
     }
 
-    public LocalDate getDeadLine() {
-        return deadLine;
+    public LocalDate getDeadline() {
+        return deadline;
     }
 
-    public void setDeadLine(LocalDate deadLine) {
-        this.deadLine = deadLine;
+    public void setDeadline(LocalDate deadline) {
+        this.deadline = deadline;
     }
 
     public Priority getPriority() {

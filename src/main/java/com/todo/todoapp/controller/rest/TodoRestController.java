@@ -2,6 +2,8 @@ package com.todo.todoapp.controller.rest;
 
 import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.service.ITodoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,8 @@ public class TodoRestController {
 
     private static final String DELETE_MAPPING_TODOS_WITH_TODO_ID_PATHVAR = "/todos/{todoId}";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
+
     private final ITodoService todoService;
 
     @Autowired
@@ -29,6 +33,9 @@ public class TodoRestController {
 
     @GetMapping(GET_MAPPING_TODOS)
     public ResponseEntity<List<Todo>> getTodos() {
+
+        LOGGER.debug("Getting todos from the db!");
+
         return todoService.getTodos();
     }
 
