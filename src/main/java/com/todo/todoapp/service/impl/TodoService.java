@@ -4,6 +4,8 @@ import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.repository.TodoRepository;
 import com.todo.todoapp.service.ITodoService;
 import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ public class TodoService implements ITodoService {
     private static final String ERROR_MESSAGE_NULL_OR_EMPTY_JSON = "The given JSON was null or empty!";
     private static final String ERROR_MESSAGE_NOT_EXISTING_ID = "No Todo was found with the given id!";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TodoService.class);
+
     private final TodoRepository todoRepository;
 
     @Autowired
@@ -28,6 +32,9 @@ public class TodoService implements ITodoService {
 
     @Override
     public ResponseEntity<List<Todo>> getTodos() {
+
+        LOGGER.info("Getting all Todos from the database!");
+
         return new ResponseEntity<>(todoRepository.findAll(), HttpStatus.OK);
     }
 
@@ -39,6 +46,8 @@ public class TodoService implements ITodoService {
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
 
+        LOGGER.info("Getting Todo from the database!");
+
         return optionalTodo
                 .<ResponseEntity<Object>>map(todo -> ResponseEntity.status(HttpStatus.OK).body(todo))
                 .orElseGet(this::getResponseEntityForNonExistingId);
@@ -49,6 +58,8 @@ public class TodoService implements ITodoService {
         if (ObjectUtils.isEmpty(todoFromJSON)) {
             return getResponseEntityForEmptyOrNullJSON();
         }
+
+        LOGGER.info("Saving Todo into the database!");
 
         todoRepository.save(todoFromJSON);
 
@@ -63,13 +74,15 @@ public class TodoService implements ITodoService {
             return getResponseEntityForEmptyOrNullJSON();
         }
 
+        LOGGER.info("Updating Todo!");
+
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        ResponseEntity<Object> responseEntity = getResponseEntityForNonExistingId();
+        ResponseEntity<Object> responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
 
-        if (optionalTodo.isPresent()) {
+        if (optionalTodo.isEmpty()) {
+            responseEntity = getResponseEntityForNonExistingId();
+        } else {
             todoRepository.save(updateTodo(optionalTodo.get(), todoFromJSON));
-
-            responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
         }
 
         return responseEntity;
@@ -91,20 +104,31 @@ public class TodoService implements ITodoService {
             return getResponseEntityForNullId();
         }
 
+        LOGGER.info("Deleting Todo from the database!");
+
         todoRepository.deleteById(todoId);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     private ResponseEntity<Object> getResponseEntityForNullId() {
+
+        LOGGER.error(ERROR_MESSAGE_NULL_ID);
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_ID);
     }
 
     private ResponseEntity<Object> getResponseEntityForEmptyOrNullJSON() {
+
+        LOGGER.error(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
     }
 
     private ResponseEntity<Object> getResponseEntityForNonExistingId() {
+
+        LOGGER.error(ERROR_MESSAGE_NOT_EXISTING_ID);
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERROR_MESSAGE_NOT_EXISTING_ID);
     }
 }
