@@ -48,4 +48,13 @@ public class Todo {
     public void setPriority(Priority priority) {
         this.priority = priority;
     }
+
+    @Override
+    public String toString() {
+        return "Todo{" +
+                "name='" + name + '\'' +
+                ", deadline=" + deadline +
+                ", priority=" + priority +
+                '}';
+    }
 }
