@@ -10,11 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 public class TodoService implements ITodoService {
 
     private static final String ERROR_MESSAGE_NULL_ID = "The given id was null!";
@@ -54,7 +57,7 @@ public class TodoService implements ITodoService {
     }
 
     @Override
-    public ResponseEntity<Object> saveTodo(Todo todoFromJSON) {
+    public ResponseEntity<Object> saveTodo(@Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoFromJSON)) {
             return getResponseEntityForEmptyOrNullJSON();
         }
@@ -67,7 +70,7 @@ public class TodoService implements ITodoService {
     }
 
     @Override
-    public ResponseEntity<Object> updateTodo(String todoId, Todo todoFromJSON) {
+    public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
             return getResponseEntityForNullId();
         } else if (ObjectUtils.isEmpty(todoFromJSON)) {
