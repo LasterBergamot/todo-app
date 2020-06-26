@@ -169,3 +169,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+jenkins/todo-app-docker-certs/*
+jenkins/todo-app-jenkins-data/*

@@ -1,17 +1,19 @@
-version: "3"
-services:
-  mongodb:
-    image: mongo:3.2.4
-    container_name: "mongodb"
-    ports:
-    - 27017:27017
-    command: --smallfiles
+version: "3.3"
 
+services:
   app:
     image: laster/todo-app
+    container_name: "todo-app"
     ports:
-      - 8080:8080
+      - "8080:8080" # must match the Spring app's port
     links:
       - mongodb
     volumes:
-      - ./logs/todo-app_logs/:/todo-app/logs/todo-app_logs/ # the path inside the container must be an absolute path
+      - "./logs/todo-app_logs/:/todo-app/logs/todo-app_logs/" # the path inside the container must be an absolute path
+
+  mongodb:
+    image: mongo:3.2.4
+    container_name: "todo-app-mongodb"
+    ports:
+      - 27017:27017
+    command: --smallfiles
