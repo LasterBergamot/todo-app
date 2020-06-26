@@ -24,7 +24,7 @@ public class TodoRestController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
 
-    private final ITodoService todoService;
+    private final ITodoService todoServic;
 
     @Autowired
     public TodoRestController(ITodoService todoService) {
