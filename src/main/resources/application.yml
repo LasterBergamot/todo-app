@@ -17,4 +17,4 @@ logging:
   file: ./logs/todo-app_logs/
 
 server:
-  port: 8888
+  port: 8080

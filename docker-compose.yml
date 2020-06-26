@@ -5,11 +5,9 @@ services:
     image: laster/todo-app
     container_name: "todo-app"
     ports:
-      - "8888:8888" # must match the Spring app's port
-#    links:
-#      - mongodb
-    networks:
-      todo-app-network:
+      - "8080:8080" # must match the Spring app's port
+    links:
+      - mongodb
     volumes:
       - "./logs/todo-app_logs/:/todo-app/logs/todo-app_logs/" # the path inside the container must be an absolute path
 
@@ -18,39 +16,4 @@ services:
     container_name: "todo-app-mongodb"
     ports:
       - 27017:27017
-    networks:
-      todo-app-network:
     command: --smallfiles
-
-  blueocean:
-    image: jenkinsci/blueocean
-    container_name: "todo-app-jenkins"
-    networks:
-      todo-app-network:
-    environment:
-      - DOCKER_HOST=tcp://todo-app-docker:2376
-      - DOCKER_CERT_PATH=/certs/client
-      - DOCKER_TLS_VERIFY=1
-    volumes:
-      - "./jenkins/todo-app-jenkins-data:/var/jenkins_home"
-      - "./jenkins/todo-app-docker-certs:/certs/client:ro"
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-
-  dind:
-    image: docker:dind
-    container_name: "todo-app-jenkins-docker"
-    privileged: true
-    networks:
-      todo-app-network:
-        aliases:
-          - todo-app-docker
-    environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    volumes:
-      - "./jenkins/todo-app-docker-certs:/certs/client"
-      - "./jenkins/todo-app-jenkins-data:/var/jenkins_home"
-
-networks:
-  todo-app-network:
