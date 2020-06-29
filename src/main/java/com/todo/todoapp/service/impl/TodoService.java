@@ -121,13 +121,19 @@ public class TodoService implements ITodoService {
             return getResponseEntityForEmptyOrNullJSON();
         }
 
-        LOGGER.info("Updating Todo!");
-
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        ResponseEntity<Object> responseEntity;
 
-        return optionalTodo.isEmpty()
-                ? getResponseEntityForNonExistingId()
-                : ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(updateTodo(optionalTodo.get(), todoFromJSON)));
+        if (optionalTodo.isEmpty()) {
+            responseEntity = getResponseEntityForNonExistingId();
+        } else {
+            LOGGER.info("Updating Todo!");
+            Todo updatedTodo = updateTodo(optionalTodo.get(), todoFromJSON);
+
+            responseEntity = ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(updatedTodo));
+        }
+
+        return responseEntity;
     }
 
     //TODO: create a util class for this?
@@ -140,17 +146,35 @@ public class TodoService implements ITodoService {
         return todoFromRepo;
     }
 
+    /**
+     * Deletes the TodoObject from the database with the given ID.
+     *
+     * @param todoId - the ID of the TodoObject to be deleted
+     * @return - a ResponseEntity with HttpStatus.BAD_REQUEST (400), if the given ID was null,
+     *           a ResponseEntity with HttpStatus.NOT_FOUND (404), if no TodoObject was found with the given ID,
+     *           else a ResponseEntity with HttpStatus.OK (200), if the TodoObject was successfully deleted.
+     */
     @Override
     public ResponseEntity<Object> deleteTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
             return getResponseEntityForNullId();
         }
 
-        LOGGER.info("Deleting Todo from the database!");
+        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        ResponseEntity<Object> responseEntity;
 
-        todoRepository.deleteById(todoId);
+        if (optionalTodo.isPresent()) {
+            LOGGER.info("Deleting Todo from the database!");
 
-        return new ResponseEntity<>(HttpStatus.OK);
+            todoRepository.deleteById(todoId);
+            responseEntity = new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            LOGGER.info("No Todo was found with the given ID!");
+
+            responseEntity = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        return responseEntity;
     }
 
     private ResponseEntity<Object> getResponseEntityForNullId() {
