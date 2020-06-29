@@ -10,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-@Document
+@Document(collection = "Todo")
 public class Todo {
 
     @Id
@@ -19,7 +19,6 @@ public class Todo {
     @NotEmpty
     @NotNull
     @Field("name")
-    @Indexed(unique = true)
     @Valid
     private String name;
 
