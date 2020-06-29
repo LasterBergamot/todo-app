@@ -5,7 +5,8 @@ spring:
     name: todo-app
   data:
     mongodb:
-      host: mongodb # by default, mongodb is referred as localhost, but while it's in a container, localhost won't point to it, so the container's name should be given here
+#      host: mongodb # by default, mongodb is referred as localhost, but while it's in a container, localhost won't point to it, so the container's name should be given here
+      host: localhost # use this when the app is used without Docker
 
 logging:
   level:
