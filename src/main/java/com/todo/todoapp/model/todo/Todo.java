@@ -42,6 +42,10 @@ public class Todo {
         this.priority = priority;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
@@ -69,7 +73,8 @@ public class Todo {
     @Override
     public String toString() {
         return "Todo{" +
-                "name='" + name + '\'' +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
                 ", deadline=" + deadline +
                 ", priority=" + priority +
                 '}';

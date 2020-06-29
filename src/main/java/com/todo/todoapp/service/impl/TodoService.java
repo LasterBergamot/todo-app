@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,9 +24,10 @@ import java.util.Optional;
 @Validated
 public class TodoService implements ITodoService {
 
-    private static final String ERROR_MESSAGE_NULL_ID = "The given id was null!";
-    private static final String ERROR_MESSAGE_NULL_OR_EMPTY_JSON = "The given JSON was null or empty!";
-    private static final String ERROR_MESSAGE_NOT_EXISTING_ID = "No Todo was found with the given id!";
+    private static final String ERR_MSG_NULL_ID = "The given id was null!";
+    private static final String ERR_MSG_NULL_OR_EMPTY_JSON = "The given JSON was null or empty!";
+    private static final String ERR_MSG_NOT_EXISTING_ID = "No Todo was found with the given id!";
+    private static final String ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID = "No Todo was found with the given ID!";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoService.class);
 
@@ -43,69 +43,102 @@ public class TodoService implements ITodoService {
 
     @PostConstruct
     public void initIndexes() {
+        LOGGER.info("Creating index for the 'name' field of Todo.");
+
         mongoTemplate
                 .indexOps("Todo")
                 .ensureIndex(
                         new Index()
-                                .named("Todo_name_index")
                                 .on("name", Sort.DEFAULT_DIRECTION)
+                                .named("Todo_name_index")
                                 .unique()
                 );
     }
 
+    /**
+     * Return with all of the Todos found in the database.
+     *
+     * @return - a ResponseEntity with HttpStatus.OK (200) and all of the Todos from the database, with all of their fields.
+     */
     @Override
     public ResponseEntity<List<Todo>> getTodos() {
-
         LOGGER.info("Getting all Todos from the database!");
 
-        return new ResponseEntity<>(todoRepository.findAll(), HttpStatus.OK);
+        return ResponseEntity.ok(todoRepository.findAll());
     }
 
+    /**
+     * Returns a ResponseEntity with the TodoObject if any exists with the given ID.
+     *
+     * @param todoId - the ID of the desired TodoObject
+     * @return  - ResponseEntity with HttpStatus.OK (200) and the TodoObject if it exists,
+     *            else a ResponseEntity with HttpStatus.NOT_FOUND (404)
+     */
     @Override
     public ResponseEntity<Object> getTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getResponseEntityForNullId();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        ResponseEntity<Object> responseEntity;
 
-        LOGGER.info("Getting Todo from the database!");
+        if (optionalTodo.isPresent()) {
+            LOGGER.info("Getting Todo from the database!");
 
-        return optionalTodo
-                .<ResponseEntity<Object>>map(todo -> ResponseEntity.status(HttpStatus.OK).body(todo))
-                .orElseGet(this::getResponseEntityForNonExistingId);
+            responseEntity = ResponseEntity.ok(optionalTodo.get());
+        } else {
+            responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID);
+        }
+
+        return responseEntity;
     }
 
+    /**
+     * Saves the given TodoObject into the database, if it's not null and it's valid.
+     *
+     * @param todoFromJSON - a valid TodoObject in JSON format
+     * @return - a ResponseEntity with HttpStatus.CREATED (201) and with the saved TodoObject,
+     *           else a ResponseEntity with HttpStatus.BAD_REQUEST (400)
+     */
     @Override
     public ResponseEntity<Object> saveTodo(@Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoFromJSON)) {
-            return getResponseEntityForEmptyOrNullJSON();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_JSON);
         }
 
         LOGGER.info("Saving Todo into the database!");
 
-        todoRepository.save(todoFromJSON);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(todoFromJSON));
     }
 
+    /**
+     * Updates the TodoObject, given by its ID, with the given TodoObject, if it's valid.
+     *
+     * @param todoId - the desired TodoObject to be updated
+     * @param todoFromJSON - the TodoObject used to update the already existing TodoObject
+     * @return - a ResponseEntity with HttpStatus.BAD_REQUEST (400) if the given ID- or the given TodoFromJSON object is null,
+     *           a ResponseEntity with HttpStatus.NOT_FOUND (404) if with the given ID no TodoObject was found,
+     *           else a ResponseEntity with HttpStatus.CREATED (201) with the updated TodoObject
+     */
     @Override
     public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getResponseEntityForNullId();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
         } else if (ObjectUtils.isEmpty(todoFromJSON)) {
-            return getResponseEntityForEmptyOrNullJSON();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_JSON);
         }
 
-        LOGGER.info("Updating Todo!");
-
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        ResponseEntity<Object> responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
+        ResponseEntity<Object> responseEntity;
 
-        if (optionalTodo.isEmpty()) {
-            responseEntity = getResponseEntityForNonExistingId();
+        if (optionalTodo.isPresent()) {
+            LOGGER.info("Updating Todo!");
+            Todo updatedTodo = updateTodo(optionalTodo.get(), todoFromJSON);
+
+            responseEntity = ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(updatedTodo));
         } else {
-            todoRepository.save(updateTodo(optionalTodo.get(), todoFromJSON));
+            responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NOT_EXISTING_ID);
         }
 
         return responseEntity;
@@ -121,37 +154,38 @@ public class TodoService implements ITodoService {
         return todoFromRepo;
     }
 
+    /**
+     * Deletes the TodoObject from the database with the given ID.
+     *
+     * @param todoId - the ID of the TodoObject to be deleted
+     * @return - a ResponseEntity with HttpStatus.BAD_REQUEST (400), if the given ID was null,
+     *           a ResponseEntity with HttpStatus.NOT_FOUND (404), if no TodoObject was found with the given ID,
+     *           else a ResponseEntity with HttpStatus.OK (200), if the TodoObject was successfully deleted.
+     */
     @Override
     public ResponseEntity<Object> deleteTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getResponseEntityForNullId();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
         }
 
-        LOGGER.info("Deleting Todo from the database!");
+        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        ResponseEntity<Object> responseEntity;
 
-        todoRepository.deleteById(todoId);
+        if (optionalTodo.isPresent()) {
+            LOGGER.info("Deleting Todo from the database!");
 
-        return new ResponseEntity<>(HttpStatus.OK);
+            todoRepository.deleteById(todoId);
+            responseEntity = new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID);
+        }
+
+        return responseEntity;
     }
 
-    private ResponseEntity<Object> getResponseEntityForNullId() {
+    private ResponseEntity<Object> getErrorSpecificResponseEntity(HttpStatus httpStatus, String errorMessage) {
+        LOGGER.error(errorMessage);
 
-        LOGGER.error(ERROR_MESSAGE_NULL_ID);
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_ID);
-    }
-
-    private ResponseEntity<Object> getResponseEntityForEmptyOrNullJSON() {
-
-        LOGGER.error(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
-    }
-
-    private ResponseEntity<Object> getResponseEntityForNonExistingId() {
-
-        LOGGER.error(ERROR_MESSAGE_NOT_EXISTING_ID);
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERROR_MESSAGE_NOT_EXISTING_ID);
+        return ResponseEntity.status(httpStatus).body(errorMessage);
     }
 }
