@@ -86,6 +86,13 @@ public class TodoService implements ITodoService {
                 .orElseGet(this::getResponseEntityForNonExistingId);
     }
 
+    /**
+     * Saves the given TodoObject into the database, if it's not null and it's valid.
+     *
+     * @param todoFromJSON - a valid TodoObject in JSON format
+     * @return - a ResponseEntity with HttpStatus.CREATED (201) and with the saved TodoObject,
+     *           else a ResponseEntity with HttpStatus.BAD_REQUEST (400)
+     */
     @Override
     public ResponseEntity<Object> saveTodo(@Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoFromJSON)) {
