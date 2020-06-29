@@ -40,7 +40,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_getTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoCouldHaveBeenRetrieved() {
+    public void test_getTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoCanBeRetrieved() {
 
     }
 
@@ -98,6 +98,11 @@ public class TodoServiceTest {
     }
 
     @Test
+    public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoIdIsEmpty() {
+
+    }
+
+    @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTodoFromJSONIsEmpty() {
 
     }
@@ -133,6 +138,11 @@ public class TodoServiceTest {
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenIdIsNull() {
+
+    }
+
+    @Test
+    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenIdIsEmpty() {
 
     }
 

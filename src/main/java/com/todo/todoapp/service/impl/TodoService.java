@@ -24,7 +24,7 @@ import java.util.Optional;
 @Validated
 public class TodoService implements ITodoService {
 
-    private static final String ERR_MSG_NULL_ID = "The given id was null!";
+    private static final String ERR_MSG_NULL_OR_EMPTY_ID = "The given id was null or empty!";
     private static final String ERR_MSG_NULL_JSON = "The given JSON was null!";
     private static final String ERR_MSG_NOT_EXISTING_ID = "No Todo was found with the given id!";
     private static final String ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID = "No Todo was found with the given ID!";
@@ -77,7 +77,7 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> getTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_ID);
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
@@ -124,7 +124,7 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_ID);
         } else if (ObjectUtils.isEmpty(todoFromJSON)) {
             return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_JSON);
         }
@@ -165,7 +165,7 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> deleteTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_ID);
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
