@@ -104,6 +104,15 @@ public class TodoService implements ITodoService {
         return new ResponseEntity<>(todoRepository.save(todoFromJSON), HttpStatus.CREATED);
     }
 
+    /**
+     * Updates the TodoObject, given by its ID, with the given TodoObject, if it's valid.
+     *
+     * @param todoId - the desired TodoObject to be updated
+     * @param todoFromJSON - the TodoObject used to update the already existing TodoObject
+     * @return - a ResponseEntity with HttpStatus.BAD_REQUEST (400) if the given ID- or the given TodoFromJSON object is null,
+     *           a ResponseEntity with HttpStatus.NOT_FOUND (404) if with the given ID no TodoObject was found,
+     *           else a ResponseEntity with HttpStatus.CREATED (201) with the updated TodoObject
+     */
     @Override
     public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
@@ -115,15 +124,10 @@ public class TodoService implements ITodoService {
         LOGGER.info("Updating Todo!");
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        ResponseEntity<Object> responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
 
-        if (optionalTodo.isEmpty()) {
-            responseEntity = getResponseEntityForNonExistingId();
-        } else {
-            todoRepository.save(updateTodo(optionalTodo.get(), todoFromJSON));
-        }
-
-        return responseEntity;
+        return optionalTodo.isEmpty()
+                ? getResponseEntityForNonExistingId()
+                : ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(updateTodo(optionalTodo.get(), todoFromJSON)));
     }
 
     //TODO: create a util class for this?
