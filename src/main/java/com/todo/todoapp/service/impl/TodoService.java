@@ -47,12 +47,17 @@ public class TodoService implements ITodoService {
                 .indexOps("Todo")
                 .ensureIndex(
                         new Index()
-                                .named("Todo_name_index")
                                 .on("name", Sort.DEFAULT_DIRECTION)
+                                .named("Todo_name_index")
                                 .unique()
                 );
     }
 
+    /**
+     * Return with all of the Todos found in the database.
+     *
+     * @return - a ResponseEntity with all of the Todos from the database, with all of their fields.
+     */
     @Override
     public ResponseEntity<List<Todo>> getTodos() {
 
@@ -84,9 +89,7 @@ public class TodoService implements ITodoService {
 
         LOGGER.info("Saving Todo into the database!");
 
-        todoRepository.save(todoFromJSON);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(todoRepository.save(todoFromJSON), HttpStatus.CREATED);
     }
 
     @Override
