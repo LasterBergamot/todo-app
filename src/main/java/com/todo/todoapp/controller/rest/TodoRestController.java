@@ -33,7 +33,6 @@ public class TodoRestController {
 
     @GetMapping(GET_MAPPING_TODOS)
     public ResponseEntity<List<Todo>> getTodos() {
-
         LOGGER.info("Getting Todos from the database!");
 
         return todoService.getTodos();
@@ -41,7 +40,6 @@ public class TodoRestController {
 
     @GetMapping(GET_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)
     public ResponseEntity<Object> getTodo(@PathVariable String todoId) {
-
         LOGGER.info("Getting Todo from the database!");
 
         return todoService.getTodo(todoId);
@@ -49,7 +47,6 @@ public class TodoRestController {
 
     @PostMapping(POST_MAPPING_TODOS)
     public ResponseEntity<Object> saveTodo(@RequestBody Todo todo) {
-
         LOGGER.info("Saving Todo into the database: {} !", todo);
 
         return todoService.saveTodo(todo);
@@ -57,7 +54,6 @@ public class TodoRestController {
 
     @PutMapping(PUT_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)
     public ResponseEntity<Object> updateTodo(@PathVariable String todoId, @RequestBody Todo todo) {
-
         LOGGER.info("Updating Todo to {} !", todo);
 
         return todoService.updateTodo(todoId, todo);
@@ -65,7 +61,6 @@ public class TodoRestController {
 
     @DeleteMapping(DELETE_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)
     public ResponseEntity<Object> deleteTodo(@PathVariable String todoId) {
-
         LOGGER.info("Deleting Todo from the database!");
 
         return todoService.deleteTodo(todoId);

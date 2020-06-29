@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -60,12 +59,18 @@ public class TodoService implements ITodoService {
      */
     @Override
     public ResponseEntity<List<Todo>> getTodos() {
-
         LOGGER.info("Getting all Todos from the database!");
 
         return new ResponseEntity<>(todoRepository.findAll(), HttpStatus.OK);
     }
 
+    /**
+     * Returns a ResponseEntity with the TodoObject if any exists with the given ID.
+     *
+     * @param todoId - the ID of the desired TodoObject
+     * @return  - ResponseEntity with HttpStatus.OK (200) and the TodoObject if it exists,
+     *            else a ResponseEntity with HttpStatus.NOT_FOUND (404)
+     */
     @Override
     public ResponseEntity<Object> getTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
@@ -138,21 +143,18 @@ public class TodoService implements ITodoService {
     }
 
     private ResponseEntity<Object> getResponseEntityForNullId() {
-
         LOGGER.error(ERROR_MESSAGE_NULL_ID);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_ID);
     }
 
     private ResponseEntity<Object> getResponseEntityForEmptyOrNullJSON() {
-
         LOGGER.error(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
     }
 
     private ResponseEntity<Object> getResponseEntityForNonExistingId() {
-
         LOGGER.error(ERROR_MESSAGE_NOT_EXISTING_ID);
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERROR_MESSAGE_NOT_EXISTING_ID);
