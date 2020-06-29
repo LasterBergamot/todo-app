@@ -24,9 +24,10 @@ import java.util.Optional;
 @Validated
 public class TodoService implements ITodoService {
 
-    private static final String ERROR_MESSAGE_NULL_ID = "The given id was null!";
-    private static final String ERROR_MESSAGE_NULL_OR_EMPTY_JSON = "The given JSON was null or empty!";
-    private static final String ERROR_MESSAGE_NOT_EXISTING_ID = "No Todo was found with the given id!";
+    private static final String ERR_MSG_NULL_ID = "The given id was null!";
+    private static final String ERR_MSG_NULL_OR_EMPTY_JSON = "The given JSON was null or empty!";
+    private static final String ERR_MSG_NOT_EXISTING_ID = "No Todo was found with the given id!";
+    private static final String ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID = "No Todo was found with the given ID!";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoService.class);
 
@@ -42,6 +43,8 @@ public class TodoService implements ITodoService {
 
     @PostConstruct
     public void initIndexes() {
+        LOGGER.info("Creating index for the 'name' field of Todo.");
+
         mongoTemplate
                 .indexOps("Todo")
                 .ensureIndex(
@@ -55,13 +58,13 @@ public class TodoService implements ITodoService {
     /**
      * Return with all of the Todos found in the database.
      *
-     * @return - a ResponseEntity with all of the Todos from the database, with all of their fields.
+     * @return - a ResponseEntity with HttpStatus.OK (200) and all of the Todos from the database, with all of their fields.
      */
     @Override
     public ResponseEntity<List<Todo>> getTodos() {
         LOGGER.info("Getting all Todos from the database!");
 
-        return new ResponseEntity<>(todoRepository.findAll(), HttpStatus.OK);
+        return ResponseEntity.ok(todoRepository.findAll());
     }
 
     /**
@@ -74,16 +77,21 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> getTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getResponseEntityForNullId();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
+        ResponseEntity<Object> responseEntity;
 
-        LOGGER.info("Getting Todo from the database!");
+        if (optionalTodo.isPresent()) {
+            LOGGER.info("Getting Todo from the database!");
 
-        return optionalTodo
-                .<ResponseEntity<Object>>map(todo -> ResponseEntity.status(HttpStatus.OK).body(todo))
-                .orElseGet(this::getResponseEntityForNonExistingId);
+            responseEntity = ResponseEntity.ok(optionalTodo.get());
+        } else {
+            responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID);
+        }
+
+        return responseEntity;
     }
 
     /**
@@ -96,12 +104,12 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> saveTodo(@Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoFromJSON)) {
-            return getResponseEntityForEmptyOrNullJSON();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_JSON);
         }
 
         LOGGER.info("Saving Todo into the database!");
 
-        return new ResponseEntity<>(todoRepository.save(todoFromJSON), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(todoFromJSON));
     }
 
     /**
@@ -116,21 +124,21 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getResponseEntityForNullId();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
         } else if (ObjectUtils.isEmpty(todoFromJSON)) {
-            return getResponseEntityForEmptyOrNullJSON();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_OR_EMPTY_JSON);
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
         ResponseEntity<Object> responseEntity;
 
-        if (optionalTodo.isEmpty()) {
-            responseEntity = getResponseEntityForNonExistingId();
-        } else {
+        if (optionalTodo.isPresent()) {
             LOGGER.info("Updating Todo!");
             Todo updatedTodo = updateTodo(optionalTodo.get(), todoFromJSON);
 
             responseEntity = ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(updatedTodo));
+        } else {
+            responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NOT_EXISTING_ID);
         }
 
         return responseEntity;
@@ -157,7 +165,7 @@ public class TodoService implements ITodoService {
     @Override
     public ResponseEntity<Object> deleteTodo(String todoId) {
         if (ObjectUtils.isEmpty(todoId)) {
-            return getResponseEntityForNullId();
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_NULL_ID);
         }
 
         Optional<Todo> optionalTodo = todoRepository.findById(todoId);
@@ -169,29 +177,15 @@ public class TodoService implements ITodoService {
             todoRepository.deleteById(todoId);
             responseEntity = new ResponseEntity<>(HttpStatus.OK);
         } else {
-            LOGGER.info("No Todo was found with the given ID!");
-
-            responseEntity = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID);
         }
 
         return responseEntity;
     }
 
-    private ResponseEntity<Object> getResponseEntityForNullId() {
-        LOGGER.error(ERROR_MESSAGE_NULL_ID);
+    private ResponseEntity<Object> getErrorSpecificResponseEntity(HttpStatus httpStatus, String errorMessage) {
+        LOGGER.error(errorMessage);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_ID);
-    }
-
-    private ResponseEntity<Object> getResponseEntityForEmptyOrNullJSON() {
-        LOGGER.error(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERROR_MESSAGE_NULL_OR_EMPTY_JSON);
-    }
-
-    private ResponseEntity<Object> getResponseEntityForNonExistingId() {
-        LOGGER.error(ERROR_MESSAGE_NOT_EXISTING_ID);
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERROR_MESSAGE_NOT_EXISTING_ID);
+        return ResponseEntity.status(httpStatus).body(errorMessage);
     }
 }
