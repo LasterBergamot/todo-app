@@ -1,16 +1,33 @@
 package com.todo.todoapp.model.todo;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
+@Document(collection = "Todo")
 public class Todo {
 
     @Id
     private String id;
 
+    @NotEmpty
+    @NotNull
+    @Field("name")
+    @Valid
     private String name;
+
+    @Field("deadline")
     private LocalDate deadline;
+
+    @NotNull
+    @Field("priority")
+    @Valid
     private Priority priority;
 
     public Todo() {}

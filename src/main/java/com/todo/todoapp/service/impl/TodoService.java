@@ -7,14 +7,22 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
+import javax.annotation.PostConstruct;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 public class TodoService implements ITodoService {
 
     private static final String ERROR_MESSAGE_NULL_ID = "The given id was null!";
@@ -25,9 +33,24 @@ public class TodoService implements ITodoService {
 
     private final TodoRepository todoRepository;
 
+    private final MongoTemplate mongoTemplate;
+
     @Autowired
-    public TodoService(TodoRepository todoRepository) {
+    public TodoService(TodoRepository todoRepository, MongoTemplate mongoTemplate) {
         this.todoRepository = todoRepository;
+        this.mongoTemplate = mongoTemplate;
+    }
+
+    @PostConstruct
+    public void initIndexes() {
+        mongoTemplate
+                .indexOps("Todo")
+                .ensureIndex(
+                        new Index()
+                                .named("Todo_name_index")
+                                .on("name", Sort.DEFAULT_DIRECTION)
+                                .unique()
+                );
     }
 
     @Override
@@ -54,7 +77,7 @@ public class TodoService implements ITodoService {
     }
 
     @Override
-    public ResponseEntity<Object> saveTodo(Todo todoFromJSON) {
+    public ResponseEntity<Object> saveTodo(@Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoFromJSON)) {
             return getResponseEntityForEmptyOrNullJSON();
         }
@@ -67,7 +90,7 @@ public class TodoService implements ITodoService {
     }
 
     @Override
-    public ResponseEntity<Object> updateTodo(String todoId, Todo todoFromJSON) {
+    public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
         if (ObjectUtils.isEmpty(todoId)) {
             return getResponseEntityForNullId();
         } else if (ObjectUtils.isEmpty(todoFromJSON)) {
