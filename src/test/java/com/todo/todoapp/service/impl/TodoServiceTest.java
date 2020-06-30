@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -411,48 +412,70 @@ public class TodoServiceTest {
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsNull() {
         // GIVEN
+        String todoId = null;
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(todoId));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(todoId);
+        verify(todoRepository, times(0)).deleteById(todoId);
     }
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsEmpty() {
         // GIVEN
+        String todoId = "";
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(todoId));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(todoId);
+        verify(todoRepository, times(0)).deleteById(todoId);
     }
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
+        String todoId = "4";
 
         // WHEN
+        when(todoRepository.findById(todoId)).thenReturn(Optional.empty());
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.deleteTodo(todoId));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).findById(todoId);
+        verify(todoRepository, times(0)).deleteById(todoId);
     }
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoHasBeenDeleted() {
         // GIVEN
+        Todo storedTodo = TODOS.get(0);
+        String todoId = storedTodo.getId();
 
         // WHEN
+        when(todoRepository.findById(todoId)).thenReturn(Optional.of(storedTodo));
+        doNothing().when(todoRepository).deleteById(todoId);
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(new ResponseEntity<>(HttpStatus.OK), todoService.deleteTodo(todoId));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).findById(todoId);
+        verify(todoRepository, times(1)).deleteById(todoId);
     }
 }
