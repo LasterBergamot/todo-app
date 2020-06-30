@@ -20,7 +20,9 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
-import static com.todo.todoapp.util.TodoConstants.*;
+import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
 
 @Service
 @Validated

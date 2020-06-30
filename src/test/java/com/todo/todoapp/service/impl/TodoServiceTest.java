@@ -5,17 +5,29 @@ import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.validation.ConstraintViolationException;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class TodoServiceTest {
 
@@ -90,41 +102,47 @@ public class TodoServiceTest {
      */
 
     @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
+    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
         // GIVEN
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(new ResponseEntity<>(HttpStatus.BAD_REQUEST), todoService.getTodo(null));
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(null));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(null);
     }
 
     @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoIdIsEmpty() {
+    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsEmpty() {
         // GIVEN
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(""));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById("");
     }
 
     @Test
-    public void test_getTodoShouldReturnAResponseEntityWithNotFound_WhenNoTodoExistsWithTheGivenId() {
+    public void test_getTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
 
         // WHEN
+        when(todoRepository.findById("4")).thenReturn(Optional.empty());
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.getTodo("4"));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).findById(anyString());
     }
 
     @Test
@@ -132,11 +150,15 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
+        when(todoRepository.findById("1")).thenReturn(Optional.of(EXPECTED_TODOS.get(0)));
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.ok(EXPECTED_TODOS.get(0)), todoService.getTodo("1"));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).findById("1");
     }
 
     /*
@@ -144,29 +166,36 @@ public class TodoServiceTest {
      */
 
     @Test
-    public void test_saveTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoFromJSONIsNull() {
+    public void test_saveTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
         // GIVEN
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON), todoService.saveTodo(null));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).save(null);
     }
 
+    @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoFromJSONIsEmpty() {
         // GIVEN
+        Todo emptyTodo = new TodoBuilder().build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Exception exception = assertThrows(ConstraintViolationException.class, () -> todoService.saveTodo(emptyTodo));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).save(emptyTodo);
     }
 
+    @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTheGivenTodoFromJSON() {
         // GIVEN
@@ -179,6 +208,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTheGivenTodoFromJSON() {
         // GIVEN
@@ -191,6 +221,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsNotAValidValueInTheGivenTodoFromJSON() {
         // GIVEN
@@ -203,6 +234,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_saveTodoShouldThrowAMongoWriteException_WhenARecordAlreadyExistsWithTheSameName() {
         // GIVEN
@@ -218,13 +250,18 @@ public class TodoServiceTest {
     @Test
     public void test_saveTodoShouldReturnAResponseEntityWithCreated_WhenTheGivenTodoFromJSONIsValid() {
         // GIVEN
+        Todo createdTodo = EXPECTED_TODOS.get(0);
 
         // WHEN
+        when(todoRepository.save(createdTodo)).thenReturn(createdTodo);
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(createdTodo), todoService.saveTodo(createdTodo));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).save(any(Todo.class));
     }
 
     /*
@@ -232,7 +269,7 @@ public class TodoServiceTest {
      */
 
     @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoIdIsNull() {
+    public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
         // GIVEN
 
         // WHEN
@@ -244,7 +281,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoFromJSONIsNull() {
+    public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
         // GIVEN
 
         // WHEN
@@ -255,6 +292,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoIdIsEmpty() {
         // GIVEN
@@ -267,6 +305,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTodoFromJSONIsEmpty() {
         // GIVEN
@@ -279,6 +318,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTodoFromJSON() {
         // GIVEN
@@ -291,6 +331,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTodoFromJSON() {
         // GIVEN
@@ -303,6 +344,7 @@ public class TodoServiceTest {
 
     }
 
+    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldHasANonValidValueInTodoFromJSON() {
         // GIVEN
@@ -316,7 +358,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithNotFound_WhenNoTodoExistsWithTheGivenId() {
+    public void test_updateTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
 
         // WHEN
@@ -344,7 +386,7 @@ public class TodoServiceTest {
      */
 
     @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenIdIsNull() {
+    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsNull() {
         // GIVEN
 
         // WHEN
@@ -356,7 +398,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenIdIsEmpty() {
+    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsEmpty() {
         // GIVEN
 
         // WHEN
@@ -368,7 +410,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithNotFound_WhenNoTodoExistsWithTheGivenId() {
+    public void test_deleteTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
 
         // WHEN
