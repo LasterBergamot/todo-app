@@ -2,6 +2,7 @@ package com.todo.todoapp.service.impl;
 
 import com.todo.todoapp.model.todo.Priority;
 import com.todo.todoapp.model.todo.Todo;
+import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,9 +54,21 @@ public class TodoServiceTest {
     public void test_getTodosShouldReturnAllOfTheRecords_WhenTheDatabaseIsNotEmpty() {
         // GIVEN
         List<Todo> expectedTodos = List.of(
-                new Todo("Todo #1", Priority.SMALL),
-                new Todo("Todo #2", LocalDate.of(2020, 6, 22), Priority.MEDIUM),
-                new Todo("Todo #3", Priority.BIG)
+                new TodoBuilder()
+                        .withId("1")
+                        .withName("Todo #1")
+                        .withPriority(Priority.SMALL)
+                        .build(),
+                new TodoBuilder()
+                        .withId("2")
+                        .withName("Todo #2")
+                        .withDeadline(LocalDate.of(2020, 6, 22))
+                        .withPriority(Priority.MEDIUM).build(),
+                new TodoBuilder()
+                        .withId("3")
+                        .withName("Todo #3")
+                        .withPriority(Priority.BIG)
+                        .build()
         );
 
         // WHEN

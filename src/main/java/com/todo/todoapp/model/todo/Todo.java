@@ -29,13 +29,8 @@ public class Todo {
     @Valid
     private Priority priority;
 
-    public Todo() {}
-
-    public Todo(String name, Priority priority) {
-        this(name, LocalDate.EPOCH, priority);
-    }
-
-    public Todo(String name, LocalDate deadline, Priority priority) {
+    public Todo(String id, @NotEmpty @NotNull @Valid String name, LocalDate deadline, @NotNull @Valid Priority priority) {
+        this.id = id;
         this.name = name;
         this.deadline = deadline;
         this.priority = priority;
