@@ -1,10 +1,32 @@
 package com.todo.todoapp.service.impl;
 
+import com.todo.todoapp.model.todo.Priority;
+import com.todo.todoapp.model.todo.Todo;
+import com.todo.todoapp.repository.TodoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.ResponseEntity;
+
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
 public class TodoServiceTest {
 
     private TodoService todoService;
+
+    private TodoRepository todoRepository;
+    private MongoTemplate mongoTemplate;
+
+    @BeforeEach
+    public void setUp() {
+        todoRepository = mock(TodoRepository.class);
+        mongoTemplate = mock(MongoTemplate.class);
+    }
 
     /*
         getTodos()
@@ -12,12 +34,40 @@ public class TodoServiceTest {
 
     @Test
     public void test_getTodosShouldReturnAnEmptyList_WhenThereAreNoRecordsInTheDatabase() {
+        // GIVEN
+        List<Todo> expectedTodos = Collections.emptyList();
 
+        // WHEN
+        when(todoRepository.findAll()).thenReturn(expectedTodos);
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
+
+        // THEN
+        assertEquals(ResponseEntity.ok(expectedTodos), todoService.getTodos());
+
+        // VERIFY
+        verify(todoRepository, times(1)).findAll();
     }
 
     @Test
     public void test_getTodosShouldReturnAllOfTheRecords_WhenTheDatabaseIsNotEmpty() {
+        // GIVEN
+        List<Todo> expectedTodos = List.of(
+                new Todo("Todo #1", Priority.SMALL),
+                new Todo("Todo #2", LocalDate.of(2020, 6, 22), Priority.MEDIUM),
+                new Todo("Todo #3", Priority.BIG)
+        );
 
+        // WHEN
+        when(todoRepository.findAll()).thenReturn(expectedTodos);
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
+
+        // THEN
+        assertEquals(ResponseEntity.ok(expectedTodos), todoService.getTodos());
+
+        // VERIFY
+        verify(todoRepository, times(1)).findAll();
     }
 
     /*
@@ -26,21 +76,49 @@ public class TodoServiceTest {
 
     @Test
     public void test_getTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoIdIsNull() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_getTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoIdIsEmpty() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_getTodoShouldReturnAResponseEntityWithNotFound_WhenNoTodoExistsWithTheGivenId() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_getTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoCanBeRetrieved() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
@@ -50,36 +128,85 @@ public class TodoServiceTest {
 
     @Test
     public void test_saveTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoFromJSONIsNull() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoFromJSONIsEmpty() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTheGivenTodoFromJSON() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTheGivenTodoFromJSON() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsNotAValidValueInTheGivenTodoFromJSON() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_saveTodoShouldThrowAMongoWriteException_WhenARecordAlreadyExistsWithTheSameName() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_saveTodoShouldReturnAResponseEntityWithCreated_WhenTheGivenTodoFromJSONIsValid() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
@@ -89,46 +216,109 @@ public class TodoServiceTest {
 
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoIdIsNull() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoFromJSONIsNull() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoIdIsEmpty() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTodoFromJSONIsEmpty() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTodoFromJSON() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTodoFromJSON() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldHasANonValidValueInTodoFromJSON() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithNotFound_WhenNoTodoExistsWithTheGivenId() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithCreated_WhenTheDesiredTodoCanBeUpdated() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
@@ -138,21 +328,49 @@ public class TodoServiceTest {
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenIdIsNull() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenIdIsEmpty() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithNotFound_WhenNoTodoExistsWithTheGivenId() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 
     @Test
     public void test_deleteTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoHasBeenDeleted() {
+        // GIVEN
+
+        // WHEN
+
+        // THEN
+
+        // VERIFY
 
     }
 }
