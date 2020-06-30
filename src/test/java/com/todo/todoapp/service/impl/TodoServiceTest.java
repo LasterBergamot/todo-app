@@ -66,9 +66,6 @@ public class TodoServiceTest {
     public void setUp() {
         todoRepository = mock(TodoRepository.class);
         mongoTemplate = mock(MongoTemplate.class);
-
-        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
-        validator = validatorFactory.getValidator();
     }
 
     /*
@@ -194,6 +191,7 @@ public class TodoServiceTest {
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoFromJSONIsEmpty() {
         // GIVEN
         Todo emptyTodo = new TodoBuilder().build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -210,6 +208,7 @@ public class TodoServiceTest {
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTheGivenTodoFromJSON() {
         // GIVEN
         Todo emptyTodo = new TodoBuilder().withId("1").withName("").withPriority(Priority.BIG).build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -226,6 +225,7 @@ public class TodoServiceTest {
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldINullInTheGivenTodoFromJSON() {
         // GIVEN
         Todo emptyTodo = new TodoBuilder().withId("1").withName("Todo #56").build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -247,6 +247,7 @@ public class TodoServiceTest {
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsNotAValidValueInTheGivenTodoFromJSON() {
         // GIVEN
         Todo emptyTodo = new TodoBuilder().withId("1").withName("Todo #56").withPriority(Priority.valueOf("")).build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -346,6 +347,7 @@ public class TodoServiceTest {
         // GIVEN
         String todoId = "1";
         Todo todoFromJSON = new TodoBuilder().build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -364,6 +366,7 @@ public class TodoServiceTest {
         // GIVEN
         String todoId = "1";
         Todo todoFromJSON = new TodoBuilder().withId(todoId).withName("").withPriority(Priority.BIG).build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -382,6 +385,7 @@ public class TodoServiceTest {
         // GIVEN
         String todoId = "1";
         Todo todoFromJSON = new TodoBuilder().withId(todoId).withName("Todo #23").build();
+        createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
@@ -524,5 +528,10 @@ public class TodoServiceTest {
         // VERIFY
         verify(todoRepository, times(1)).findById(todoId);
         verify(todoRepository, times(1)).deleteById(todoId);
+    }
+
+    private void createValidator() {
+        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+        validator = validatorFactory.getValidator();
     }
 }
