@@ -7,6 +7,7 @@ import com.todo.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
@@ -17,6 +18,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class TodoServiceTest {
+
+    public static final List<Todo> EXPECTED_TODOS = List.of(
+            new TodoBuilder()
+                    .withId("1")
+                    .withName("Todo #1")
+                    .withPriority(Priority.SMALL)
+                    .build(),
+            new TodoBuilder()
+                    .withId("2")
+                    .withName("Todo #2")
+                    .withDeadline(LocalDate.of(2020, 6, 22))
+                    .withPriority(Priority.MEDIUM).build(),
+            new TodoBuilder()
+                    .withId("3")
+                    .withName("Todo #3")
+                    .withPriority(Priority.BIG)
+                    .build()
+    );
 
     private TodoService todoService;
 
@@ -53,31 +72,14 @@ public class TodoServiceTest {
     @Test
     public void test_getTodosShouldReturnAllOfTheRecords_WhenTheDatabaseIsNotEmpty() {
         // GIVEN
-        List<Todo> expectedTodos = List.of(
-                new TodoBuilder()
-                        .withId("1")
-                        .withName("Todo #1")
-                        .withPriority(Priority.SMALL)
-                        .build(),
-                new TodoBuilder()
-                        .withId("2")
-                        .withName("Todo #2")
-                        .withDeadline(LocalDate.of(2020, 6, 22))
-                        .withPriority(Priority.MEDIUM).build(),
-                new TodoBuilder()
-                        .withId("3")
-                        .withName("Todo #3")
-                        .withPriority(Priority.BIG)
-                        .build()
-        );
 
         // WHEN
-        when(todoRepository.findAll()).thenReturn(expectedTodos);
+        when(todoRepository.findAll()).thenReturn(EXPECTED_TODOS);
 
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(expectedTodos), todoService.getTodos());
+        assertEquals(ResponseEntity.ok(EXPECTED_TODOS), todoService.getTodos());
 
         // VERIFY
         verify(todoRepository, times(1)).findAll();
@@ -88,12 +90,14 @@ public class TodoServiceTest {
      */
 
     @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequest_WhenTheGivenTodoIdIsNull() {
+    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
         // GIVEN
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(new ResponseEntity<>(HttpStatus.BAD_REQUEST), todoService.getTodo(null));
 
         // VERIFY
 

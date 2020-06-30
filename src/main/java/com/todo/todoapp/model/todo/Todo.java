@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Document(collection = "Todo")
 public class Todo {
@@ -62,6 +63,22 @@ public class Todo {
 
     public void setPriority(Priority priority) {
         this.priority = priority;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Todo todo = (Todo) o;
+        return Objects.equals(id, todo.id) &&
+                Objects.equals(name, todo.name) &&
+                Objects.equals(deadline, todo.deadline) &&
+                priority == todo.priority;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, deadline, priority);
     }
 
     @Override
