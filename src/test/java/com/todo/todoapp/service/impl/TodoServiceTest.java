@@ -11,17 +11,21 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import javax.validation.ConstraintViolationException;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
 import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
 import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -55,10 +59,16 @@ public class TodoServiceTest {
     private TodoRepository todoRepository;
     private MongoTemplate mongoTemplate;
 
+    private Validator validator;
+
+
     @BeforeEach
     public void setUp() {
         todoRepository = mock(TodoRepository.class);
         mongoTemplate = mock(MongoTemplate.class);
+
+        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+        validator = validatorFactory.getValidator();
     }
 
     /*
@@ -180,7 +190,6 @@ public class TodoServiceTest {
         verify(todoRepository, times(0)).save(null);
     }
 
-    @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoFromJSONIsEmpty() {
         // GIVEN
@@ -190,49 +199,64 @@ public class TodoServiceTest {
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        Exception exception = assertThrows(ConstraintViolationException.class, () -> todoService.saveTodo(emptyTodo));
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodo);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
         verify(todoRepository, times(0)).save(emptyTodo);
     }
 
-    @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTheGivenTodoFromJSON() {
         // GIVEN
+        Todo emptyTodo = new TodoBuilder().withId("1").withName("").withPriority(Priority.BIG).build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodo);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
-
+        verify(todoRepository, times(0)).save(emptyTodo);
     }
 
-    @Disabled
     @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTheGivenTodoFromJSON() {
+    public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldINullInTheGivenTodoFromJSON() {
         // GIVEN
+        Todo emptyTodo = new TodoBuilder().withId("1").withName("Todo #56").build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodo);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
-
+        verify(todoRepository, times(0)).save(emptyTodo);
     }
 
+    /*
+        TODO: when the JSON request is sent, and the priority field's value is not valid, before reaching the RestController's method's body, a 404 error is sent back
+         How can this be tested?
+     */
     @Disabled
     @Test
     public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsNotAValidValueInTheGivenTodoFromJSON() {
         // GIVEN
+        Todo emptyTodo = new TodoBuilder().withId("1").withName("Todo #56").withPriority(Priority.valueOf("")).build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodo);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
-
+        verify(todoRepository, times(0)).save(emptyTodo);
     }
 
     @Disabled
@@ -300,58 +324,81 @@ public class TodoServiceTest {
         verify(todoRepository, times(0)).save(null);
     }
 
-    @Disabled
     @Test
-    public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoIdIsEmpty() {
+    public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsEmpty() {
         // GIVEN
+        String todoId = "";
+        Todo todoFromJSON = TODOS.get(0);
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.updateTodo(todoId, todoFromJSON));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(todoId);
+        verify(todoRepository, times(0)).save(todoFromJSON);
     }
 
-    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTodoFromJSONIsEmpty() {
         // GIVEN
+        String todoId = "1";
+        Todo todoFromJSON = new TodoBuilder().build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(todoId);
+        verify(todoRepository, times(0)).save(todoFromJSON);
     }
 
-    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTodoFromJSON() {
         // GIVEN
+        String todoId = "1";
+        Todo todoFromJSON = new TodoBuilder().withId(todoId).withName("").withPriority(Priority.BIG).build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(todoId);
+        verify(todoRepository, times(0)).save(todoFromJSON);
     }
 
-    @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTodoFromJSON() {
         // GIVEN
+        String todoId = "1";
+        Todo todoFromJSON = new TodoBuilder().withId(todoId).withName("Todo #23").build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
+        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(todoId);
+        verify(todoRepository, times(0)).save(todoFromJSON);
     }
 
+    /*
+        TODO: when the JSON request is sent, and the priority field's value is not valid, before reaching the RestController's method's body, a 404 error is sent back
+         How can this be tested?
+     */
     @Disabled
     @Test
     public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldHasANonValidValueInTodoFromJSON() {

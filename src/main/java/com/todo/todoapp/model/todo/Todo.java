@@ -14,7 +14,7 @@ import java.util.Objects;
 public class Todo {
 
     @Id
-    private String id;
+    private final String id;
 
     @NotEmpty
     @NotNull
