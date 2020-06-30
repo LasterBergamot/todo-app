@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 
 public class TodoServiceTest {
 
-    public static final List<Todo> EXPECTED_TODOS = List.of(
+    public static final List<Todo> TODOS = List.of(
             new TodoBuilder()
                     .withId("1")
                     .withName("Todo #1")
@@ -86,12 +86,12 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
-        when(todoRepository.findAll()).thenReturn(EXPECTED_TODOS);
+        when(todoRepository.findAll()).thenReturn(TODOS);
 
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(EXPECTED_TODOS), todoService.getTodos());
+        assertEquals(ResponseEntity.ok(TODOS), todoService.getTodos());
 
         // VERIFY
         verify(todoRepository, times(1)).findAll();
@@ -150,12 +150,12 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
-        when(todoRepository.findById("1")).thenReturn(Optional.of(EXPECTED_TODOS.get(0)));
+        when(todoRepository.findById("1")).thenReturn(Optional.of(TODOS.get(0)));
 
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(EXPECTED_TODOS.get(0)), todoService.getTodo("1"));
+        assertEquals(ResponseEntity.ok(TODOS.get(0)), todoService.getTodo("1"));
 
         // VERIFY
         verify(todoRepository, times(1)).findById("1");
@@ -250,15 +250,15 @@ public class TodoServiceTest {
     @Test
     public void test_saveTodoShouldReturnAResponseEntityWithCreated_WhenTheGivenTodoFromJSONIsValid() {
         // GIVEN
-        Todo createdTodo = EXPECTED_TODOS.get(0);
+        Todo todoFromJSON = TODOS.get(0);
 
         // WHEN
-        when(todoRepository.save(createdTodo)).thenReturn(createdTodo);
+        when(todoRepository.save(todoFromJSON)).thenReturn(todoFromJSON);
 
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(createdTodo), todoService.saveTodo(createdTodo));
+        assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(todoFromJSON), todoService.saveTodo(todoFromJSON));
 
         // VERIFY
         verify(todoRepository, times(1)).save(any(Todo.class));
@@ -271,13 +271,17 @@ public class TodoServiceTest {
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
         // GIVEN
+        Todo todoForUpdating = new TodoBuilder().withId("1").withName("Todo #88").withPriority(Priority.BIG).build();
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.updateTodo(null, todoForUpdating));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById(null);
+        verify(todoRepository, times(0)).save(todoForUpdating);
     }
 
     @Test
@@ -285,11 +289,14 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON), todoService.updateTodo("1", null));
 
         // VERIFY
-
+        verify(todoRepository, times(0)).findById("1");
+        verify(todoRepository, times(0)).save(null);
     }
 
     @Disabled
@@ -360,25 +367,41 @@ public class TodoServiceTest {
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
+        String todoId = "4";
+        Todo todoFromJSON = new TodoBuilder().withId("4").withName("Todo #89").withPriority(Priority.SMALL).build();
 
         // WHEN
+        when(todoRepository.findById(todoId)).thenReturn(Optional.empty());
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.updateTodo(todoId, todoFromJSON));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).findById(todoId);
+        verify(todoRepository, times(0)).save(todoFromJSON);
     }
 
     @Test
     public void test_updateTodoShouldReturnAResponseEntityWithCreated_WhenTheDesiredTodoCanBeUpdated() {
         // GIVEN
+        String todoId = "1";
+        Todo todoFromJSON = new TodoBuilder().withId("1").withName("Todo #88").withPriority(Priority.BIG).build();
+        Todo storedTodo = TODOS.get(0);
 
         // WHEN
+        when(todoRepository.findById(todoId)).thenReturn(Optional.of(storedTodo));
+        when(todoRepository.save(todoFromJSON)).thenReturn(todoFromJSON);
+
+        todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
+        assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(todoFromJSON), todoService.updateTodo(todoId, todoFromJSON));
 
         // VERIFY
-
+        verify(todoRepository, times(1)).findById(todoId);
+        verify(todoRepository, times(1)).save(todoFromJSON);
     }
 
     /*
