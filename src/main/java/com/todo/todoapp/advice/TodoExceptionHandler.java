@@ -20,12 +20,14 @@ public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
     protected ResponseEntity<Object> handleExceptions(RuntimeException runtimeException, WebRequest webRequest) {
-        StringBuilder stringBuilder = new StringBuilder("Message: An unexpected exception occurred!");
+        StringBuilder stringBuilder = new StringBuilder("Message: ");
 
         if (runtimeException instanceof DuplicateKeyException) {
-            stringBuilder = new StringBuilder("Message: A record with this key already exists!");
+            stringBuilder.append("A record with this key already exists!");
         } else if (runtimeException instanceof ConstraintViolationException) {
-            stringBuilder = new StringBuilder("Message: The given input is not valid!");
+            stringBuilder.append("The given input is not valid!");
+        } else {
+            stringBuilder.append("An unexpected exception occurred!");
         }
 
         stringBuilder.append("\n").append("Original message: ").append(runtimeException.getMessage());
