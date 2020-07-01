@@ -1,12 +1,10 @@
 package com.todo.todoapp.service.impl;
 
-import com.mongodb.MongoWriteException;
 import com.todo.todoapp.model.todo.Priority;
 import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
@@ -28,7 +26,6 @@ import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
 import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -299,26 +296,6 @@ public class TodoServiceTest {
 
         // VERIFY
         verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Disabled
-    @Test
-    public void test_saveTodoShouldThrowAMongoWriteException_WhenARecordAlreadyExistsWithTheSameName() {
-        // GIVEN
-        Todo todo = TODO_LIST.get(0);
-
-        // WHEN
-        when(todoRepository.save(todo)).thenReturn(todo);
-        when(todoRepository.save(todo)).thenThrow(MongoWriteException.class);
-
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(todo), todoService.saveTodo(todo));
-        assertThrows(MongoWriteException.class, () -> todoService.saveTodo(todo));
-
-        // VERIFY
-
     }
 
     @Test
