@@ -6,6 +6,8 @@ import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -124,38 +126,28 @@ public class TodoServiceTest {
         getTodos()
      */
 
-    @Test
-    public void test_getTodosShouldReturnAnEmptyList_WhenThereAreNoRecordsInTheDatabase() {
-        // GIVEN
-        List<Todo> noTodos = Collections.emptyList();
-
-        // WHEN
-        when(todoRepository.findAll()).thenReturn(noTodos);
-
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.ok(noTodos), todoService.getTodos());
-
-        // VERIFY
-        verify(todoRepository, times(1)).findAll();
+    public static Object[][] getTodosDataprovider() {
+        return new Object[][] {
+                {Collections.emptyList(), ResponseEntity.ok(Collections.emptyList()), 1},
+                {TODO_LIST, ResponseEntity.ok(TODO_LIST), 1}
+        };
     }
 
-    @Test
-    public void test_getTodosShouldReturnAllOfTheRecords_WhenTheDatabaseIsNotEmpty() {
+    @ParameterizedTest
+    @MethodSource("getTodosDataprovider")
+    public void getTodosTest(List<Todo> todoList, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
         // GIVEN
-        List<Todo> returnedTodos = TODO_LIST;
 
         // WHEN
-        when(todoRepository.findAll()).thenReturn(returnedTodos);
+        when(todoRepository.findAll()).thenReturn(todoList);
 
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(returnedTodos), todoService.getTodos());
+        assertEquals(expectedResponseEntity, todoService.getTodos());
 
         // VERIFY
-        verify(todoRepository, times(1)).findAll();
+        verify(todoRepository, times(expectedNumberOfInvocations)).findAll();
     }
 
     /*
