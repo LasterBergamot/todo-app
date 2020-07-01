@@ -115,7 +115,6 @@ public class TodoServiceTest {
 
     private Validator validator;
 
-
     @BeforeEach
     public void setUp() {
         todoRepository = mock(TodoRepository.class);
@@ -126,7 +125,7 @@ public class TodoServiceTest {
         getTodos()
      */
 
-    public static Object[][] getTodosDataprovider() {
+    private static Object[][] getTodosDataProvider() {
         return new Object[][] {
                 {Collections.emptyList(), ResponseEntity.ok(Collections.emptyList()), 1},
                 {TODO_LIST, ResponseEntity.ok(TODO_LIST), 1}
@@ -134,7 +133,7 @@ public class TodoServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("getTodosDataprovider")
+    @MethodSource("getTodosDataProvider")
     public void getTodosTest(List<Todo> todoList, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
         // GIVEN
 
@@ -154,59 +153,39 @@ public class TodoServiceTest {
         getTodo()
      */
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
+    private static Object[][] getTodoDataProvider() {
+        return new Object[][] {
+                {null, ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), 0},
+                {EMPTY_STRING, ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), 0}
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource("getTodoDataProvider")
+    public void getTodoTest(String todoId, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
         // GIVEN
-        String nullTodoId = null;
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(nullTodoId));
+        assertEquals(expectedResponseEntity, todoService.getTodo(todoId));
 
         // VERIFY
-        verify(todoRepository, times(0)).findById(nullTodoId);
+        verify(todoRepository, times(expectedNumberOfInvocations)).findById(anyString());
     }
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsEmpty() {
-        // GIVEN
-        String emptyTodoId = EMPTY_STRING;
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(emptyTodoId));
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
+    private static Object[][] getTodoWithMockingDataProvider() {
+        return new Object[][] {
+                {TODO_ID_FOUR, Optional.empty(), ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), 1},
+                {TODO_ID_ONE, Optional.of(TODO_LIST.get(0)), ResponseEntity.ok(TODO_LIST.get(0)), 1}
+        };
     }
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
+    @ParameterizedTest
+    @MethodSource("getTodoWithMockingDataProvider")
+    public void getTodoWithMockingTest(String todoId, Optional<Todo> optionalStoredTodo, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
         // GIVEN
-        String nonExistingTodoId = TODO_ID_FOUR;
-
-        // WHEN
-        when(todoRepository.findById(TODO_ID_FOUR)).thenReturn(Optional.empty());
-
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.getTodo(nonExistingTodoId));
-
-        // VERIFY
-        verify(todoRepository, times(1)).findById(anyString());
-    }
-
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoCanBeRetrieved() {
-        // GIVEN
-        String todoId = TODO_ID_ONE;
-        Todo storedTodo = TODO_LIST.get(0);
-        Optional<Todo> optionalStoredTodo = Optional.of(storedTodo);
 
         // WHEN
         when(todoRepository.findById(todoId)).thenReturn(optionalStoredTodo);
@@ -214,10 +193,10 @@ public class TodoServiceTest {
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(storedTodo), todoService.getTodo(todoId));
+        assertEquals(expectedResponseEntity, todoService.getTodo(todoId));
 
         // VERIFY
-        verify(todoRepository, times(1)).findById(anyString());
+        verify(todoRepository, times(expectedNumberOfInvocations)).findById(anyString());
     }
 
     /*
