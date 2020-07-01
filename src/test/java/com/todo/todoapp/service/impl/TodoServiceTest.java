@@ -108,6 +108,14 @@ public class TodoServiceTest {
                     .build()
     );
 
+    private static final String DP_GET_TODOS_DATA_PROVIDER = "getTodosDataProvider";
+    private static final String DP_GET_TODO_DATA_PROVIDER = "getTodoDataProvider";
+    private static final String DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER = "getTodoWithMockingDataProvider";
+    private static final String DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "saveTodoConstraintViolationExceptionDataProvider";
+    private static final String DP_UPDATE_TODO_DATA_PROVIDER = "updateTodoDataProvider";
+    private static final String DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "updateTodoConstraintViolationExceptionDataProvider";
+    private static final String DP_DELETE_TODO_DATA_PROVIDER = "deleteTodoDataProvider";
+
     private TodoService todoService;
 
     private TodoRepository todoRepository;
@@ -127,14 +135,14 @@ public class TodoServiceTest {
 
     private static Object[][] getTodosDataProvider() {
         return new Object[][] {
-                {Collections.emptyList(), ResponseEntity.ok(Collections.emptyList()), 1},
-                {TODO_LIST, ResponseEntity.ok(TODO_LIST), 1}
+                {Collections.emptyList()},
+                {TODO_LIST}
         };
     }
 
     @ParameterizedTest
-    @MethodSource("getTodosDataProvider")
-    public void getTodosTest(List<Todo> todoList, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
+    @MethodSource(DP_GET_TODOS_DATA_PROVIDER)
+    public void getTodosTest(List<Todo> todoList) {
         // GIVEN
 
         // WHEN
@@ -143,10 +151,10 @@ public class TodoServiceTest {
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(expectedResponseEntity, todoService.getTodos());
+        assertEquals(ResponseEntity.ok(todoList), todoService.getTodos());
 
         // VERIFY
-        verify(todoRepository, times(expectedNumberOfInvocations)).findAll();
+        verify(todoRepository, times(1)).findAll();
     }
 
     /*
@@ -155,36 +163,36 @@ public class TodoServiceTest {
 
     private static Object[][] getTodoDataProvider() {
         return new Object[][] {
-                {null, ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), 0},
-                {EMPTY_STRING, ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), 0}
+                {null},
+                {EMPTY_STRING}
         };
     }
 
     @ParameterizedTest
-    @MethodSource("getTodoDataProvider")
-    public void getTodoTest(String todoId, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
+    @MethodSource(DP_GET_TODO_DATA_PROVIDER)
+    public void getTodoTest(String todoId) {
         // GIVEN
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(expectedResponseEntity, todoService.getTodo(todoId));
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(todoId));
 
         // VERIFY
-        verify(todoRepository, times(expectedNumberOfInvocations)).findById(anyString());
+        verify(todoRepository, times(0)).findById(anyString());
     }
 
     private static Object[][] getTodoWithMockingDataProvider() {
         return new Object[][] {
-                {TODO_ID_FOUR, Optional.empty(), ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), 1},
-                {TODO_ID_ONE, Optional.of(TODO_LIST.get(0)), ResponseEntity.ok(TODO_LIST.get(0)), 1}
+                {TODO_ID_FOUR, Optional.empty(), ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID)},
+                {TODO_ID_ONE, Optional.of(TODO_LIST.get(0)), ResponseEntity.ok(TODO_LIST.get(0))}
         };
     }
 
     @ParameterizedTest
-    @MethodSource("getTodoWithMockingDataProvider")
-    public void getTodoWithMockingTest(String todoId, Optional<Todo> optionalStoredTodo, ResponseEntity<Object> expectedResponseEntity, int expectedNumberOfInvocations) {
+    @MethodSource(DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER)
+    public void getTodoWithMockingTest(String todoId, Optional<Todo> optionalStoredTodo, ResponseEntity<Object> expectedResponseEntity) {
         // GIVEN
 
         // WHEN
@@ -196,7 +204,7 @@ public class TodoServiceTest {
         assertEquals(expectedResponseEntity, todoService.getTodo(todoId));
 
         // VERIFY
-        verify(todoRepository, times(expectedNumberOfInvocations)).findById(anyString());
+        verify(todoRepository, times(1)).findById(anyString());
     }
 
     /*
@@ -212,7 +220,7 @@ public class TodoServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("saveTodoConstraintViolationExceptionDataProvider")
+    @MethodSource(DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER)
     public void saveTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
         // GIVEN
         createValidator();
@@ -273,7 +281,7 @@ public class TodoServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("updateTodoDataProvider")
+    @MethodSource(DP_UPDATE_TODO_DATA_PROVIDER)
     public void updateTodoTest(String todoId, Todo todoFromJSON, ResponseEntity<Object> expectedResponseEntity) {
         // GIVEN
 
@@ -297,7 +305,7 @@ public class TodoServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("updateTodoConstraintViolationExceptionDataProvider")
+    @MethodSource(DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER)
     public void updateTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
         // GIVEN
         createValidator();
@@ -366,7 +374,7 @@ public class TodoServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("deleteTodoDataProvider")
+    @MethodSource(DP_DELETE_TODO_DATA_PROVIDER)
     public void deleteTodoTest(String todoId) {
         // GIVEN
 
