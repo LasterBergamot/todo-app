@@ -358,32 +358,23 @@ public class TodoServiceTest {
         deleteTodo()
      */
 
-    @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsNull() {
-        // GIVEN
-        String nullTodoId = null;
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(nullTodoId));
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
-        verify(todoRepository, times(0)).deleteById(anyString());
+    private static Object[][] deleteTodoDataProvider() {
+        return new Object[][] {
+                {null},
+                {EMPTY_STRING}
+        };
     }
 
-    @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsEmpty() {
+    @ParameterizedTest
+    @MethodSource("deleteTodoDataProvider")
+    public void deleteTodoTest(String todoId) {
         // GIVEN
-        String emptyTodoId = EMPTY_STRING;
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(emptyTodoId));
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(todoId));
 
         // VERIFY
         verify(todoRepository, times(0)).findById(anyString());
