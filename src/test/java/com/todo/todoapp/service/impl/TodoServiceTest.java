@@ -6,6 +6,8 @@ import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -106,13 +108,20 @@ public class TodoServiceTest {
                     .build()
     );
 
+    private static final String DP_GET_TODOS_DATA_PROVIDER = "getTodosDataProvider";
+    private static final String DP_GET_TODO_DATA_PROVIDER = "getTodoDataProvider";
+    private static final String DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER = "getTodoWithMockingDataProvider";
+    private static final String DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "saveTodoConstraintViolationExceptionDataProvider";
+    private static final String DP_UPDATE_TODO_DATA_PROVIDER = "updateTodoDataProvider";
+    private static final String DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "updateTodoConstraintViolationExceptionDataProvider";
+    private static final String DP_DELETE_TODO_DATA_PROVIDER = "deleteTodoDataProvider";
+
     private TodoService todoService;
 
     private TodoRepository todoRepository;
     private MongoTemplate mongoTemplate;
 
     private Validator validator;
-
 
     @BeforeEach
     public void setUp() {
@@ -124,35 +133,25 @@ public class TodoServiceTest {
         getTodos()
      */
 
-    @Test
-    public void test_getTodosShouldReturnAnEmptyList_WhenThereAreNoRecordsInTheDatabase() {
-        // GIVEN
-        List<Todo> noTodos = Collections.emptyList();
-
-        // WHEN
-        when(todoRepository.findAll()).thenReturn(noTodos);
-
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.ok(noTodos), todoService.getTodos());
-
-        // VERIFY
-        verify(todoRepository, times(1)).findAll();
+    private static Object[][] getTodosDataProvider() {
+        return new Object[][] {
+                {Collections.emptyList()},
+                {TODO_LIST}
+        };
     }
 
-    @Test
-    public void test_getTodosShouldReturnAllOfTheRecords_WhenTheDatabaseIsNotEmpty() {
+    @ParameterizedTest
+    @MethodSource(DP_GET_TODOS_DATA_PROVIDER)
+    public void getTodosTest(List<Todo> todoList) {
         // GIVEN
-        List<Todo> returnedTodos = TODO_LIST;
 
         // WHEN
-        when(todoRepository.findAll()).thenReturn(returnedTodos);
+        when(todoRepository.findAll()).thenReturn(todoList);
 
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(returnedTodos), todoService.getTodos());
+        assertEquals(ResponseEntity.ok(todoList), todoService.getTodos());
 
         // VERIFY
         verify(todoRepository, times(1)).findAll();
@@ -162,59 +161,39 @@ public class TodoServiceTest {
         getTodo()
      */
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
-        // GIVEN
-        String nullTodoId = null;
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(nullTodoId));
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(nullTodoId);
+    private static Object[][] getTodoDataProvider() {
+        return new Object[][] {
+                {null},
+                {EMPTY_STRING}
+        };
     }
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsEmpty() {
+    @ParameterizedTest
+    @MethodSource(DP_GET_TODO_DATA_PROVIDER)
+    public void getTodoTest(String todoId) {
         // GIVEN
-        String emptyTodoId = EMPTY_STRING;
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(emptyTodoId));
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(todoId));
 
         // VERIFY
         verify(todoRepository, times(0)).findById(anyString());
     }
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
-        // GIVEN
-        String nonExistingTodoId = TODO_ID_FOUR;
-
-        // WHEN
-        when(todoRepository.findById(TODO_ID_FOUR)).thenReturn(Optional.empty());
-
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.getTodo(nonExistingTodoId));
-
-        // VERIFY
-        verify(todoRepository, times(1)).findById(anyString());
+    private static Object[][] getTodoWithMockingDataProvider() {
+        return new Object[][] {
+                {TODO_ID_FOUR, Optional.empty(), ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID)},
+                {TODO_ID_ONE, Optional.of(TODO_LIST.get(0)), ResponseEntity.ok(TODO_LIST.get(0))}
+        };
     }
 
-    @Test
-    public void test_getTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoCanBeRetrieved() {
+    @ParameterizedTest
+    @MethodSource(DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER)
+    public void getTodoWithMockingTest(String todoId, Optional<Todo> optionalStoredTodo, ResponseEntity<Object> expectedResponseEntity) {
         // GIVEN
-        String todoId = TODO_ID_ONE;
-        Todo storedTodo = TODO_LIST.get(0);
-        Optional<Todo> optionalStoredTodo = Optional.of(storedTodo);
 
         // WHEN
         when(todoRepository.findById(todoId)).thenReturn(optionalStoredTodo);
@@ -222,7 +201,7 @@ public class TodoServiceTest {
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.ok(storedTodo), todoService.getTodo(todoId));
+        assertEquals(expectedResponseEntity, todoService.getTodo(todoId));
 
         // VERIFY
         verify(todoRepository, times(1)).findById(anyString());
@@ -231,6 +210,31 @@ public class TodoServiceTest {
     /*
         saveTodo()
      */
+
+    private static Object[][] saveTodoConstraintViolationExceptionDataProvider() {
+        return new Object[][] {
+                {TODO_MAP.get(KEY_EMPTY_TODO)},
+                {TODO_MAP.get(KEY_TODO_WITH_EMPTY_NAME)},
+                {TODO_MAP.get(KEY_TODO_WITHOUT_PRIORITY)}
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource(DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER)
+    public void saveTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
+        // GIVEN
+        createValidator();
+
+        // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
+
+        // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
+        assertFalse(todoViolations.isEmpty());
+
+        // VERIFY
+        verify(todoRepository, times(0)).save(any(Todo.class));
+    }
 
     @Test
     public void test_saveTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
@@ -242,57 +246,6 @@ public class TodoServiceTest {
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON), todoService.saveTodo(nullTodoFromJSON));
-
-        // VERIFY
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoFromJSONIsEmpty() {
-        // GIVEN
-        Todo emptyTodoFromJSON = TODO_MAP.get(KEY_EMPTY_TODO);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodoFromJSON);
-        assertFalse(todoViolations.isEmpty());
-
-        // VERIFY
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTheGivenTodoFromJSON() {
-        // GIVEN
-        Todo todoFromJSONWithEmptyName = TODO_MAP.get(KEY_TODO_WITH_EMPTY_NAME);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSONWithEmptyName);
-        assertFalse(todoViolations.isEmpty());
-
-        // VERIFY
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldINullInTheGivenTodoFromJSON() {
-        // GIVEN
-        Todo todoFromJSONWithoutPriority = TODO_MAP.get(KEY_TODO_WITHOUT_PRIORITY);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSONWithoutPriority);
-        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
         verify(todoRepository, times(0)).save(any(Todo.class));
@@ -319,104 +272,49 @@ public class TodoServiceTest {
         updateTodo()
      */
 
-    @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsNull() {
+    private static Object[][] updateTodoDataProvider() {
+        return new Object[][] {
+                {null, TODO_LIST.get(0), ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID)},
+                {TODO_ID_ONE, null, ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON)},
+                {EMPTY_STRING, TODO_LIST.get(0), ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID)}
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource(DP_UPDATE_TODO_DATA_PROVIDER)
+    public void updateTodoTest(String todoId, Todo todoFromJSON, ResponseEntity<Object> expectedResponseEntity) {
         // GIVEN
-        String nullTodoId = null;
-        Todo todoFromJSON = TODO_LIST.get(0);
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.updateTodo(nullTodoId, todoFromJSON));
+        assertEquals(expectedResponseEntity, todoService.updateTodo(todoId, todoFromJSON));
 
         // VERIFY
         verify(todoRepository, times(0)).findById(anyString());
         verify(todoRepository, times(0)).save(any(Todo.class));
     }
 
-    @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
-        // GIVEN
-        String todoId = TODO_ID_ONE;
-        Todo nullTodoFromJSON = null;
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON), todoService.updateTodo(todoId, nullTodoFromJSON));
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
-        verify(todoRepository, times(0)).save(any(Todo.class));
+    private static Object[][] updateTodoConstraintViolationExceptionDataProvider() {
+        return new Object[][] {
+                {TODO_MAP.get(KEY_EMPTY_TODO)},
+                {TODO_MAP.get(KEY_TODO_WITH_EMPTY_NAME)},
+                {TODO_MAP.get(KEY_TODO_WITHOUT_PRIORITY)}
+        };
     }
 
-    @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoIdIsEmpty() {
+    @ParameterizedTest
+    @MethodSource(DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER)
+    public void updateTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
         // GIVEN
-        String emptyTodoId = EMPTY_STRING;
-        Todo todoFromJSON = TODO_LIST.get(0);
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.updateTodo(emptyTodoId, todoFromJSON));
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_updateTodoShouldThrowAConstraintViolationException_WhenTodoFromJSONIsEmpty() {
-        // GIVEN
-        Todo emptyTodoFromJSON = TODO_MAP.get(KEY_EMPTY_TODO);
         createValidator();
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodoFromJSON);
-        assertFalse(todoViolations.isEmpty());
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_updateTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTodoFromJSON() {
-        // GIVEN
-        Todo todoFromJSONWithEmptyName = TODO_MAP.get(KEY_TODO_WITH_EMPTY_NAME);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSONWithEmptyName);
-        assertFalse(todoViolations.isEmpty());
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_updateTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldIsEmptyInTodoFromJSON() {
-        // GIVEN
-        Todo todoFromJSONWithoutPriority = TODO_MAP.get(KEY_TODO_WITHOUT_PRIORITY);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSONWithoutPriority);
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
         assertFalse(todoViolations.isEmpty());
 
         // VERIFY
@@ -468,32 +366,23 @@ public class TodoServiceTest {
         deleteTodo()
      */
 
-    @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsNull() {
-        // GIVEN
-        String nullTodoId = null;
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(nullTodoId));
-
-        // VERIFY
-        verify(todoRepository, times(0)).findById(anyString());
-        verify(todoRepository, times(0)).deleteById(anyString());
+    private static Object[][] deleteTodoDataProvider() {
+        return new Object[][] {
+                {null},
+                {EMPTY_STRING}
+        };
     }
 
-    @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenIdIsEmpty() {
+    @ParameterizedTest
+    @MethodSource(DP_DELETE_TODO_DATA_PROVIDER)
+    public void deleteTodoTest(String todoId) {
         // GIVEN
-        String emptyTodoId = EMPTY_STRING;
 
         // WHEN
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(emptyTodoId));
+        assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(todoId));
 
         // VERIFY
         verify(todoRepository, times(0)).findById(anyString());
