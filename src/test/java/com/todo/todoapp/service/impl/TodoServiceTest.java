@@ -203,6 +203,31 @@ public class TodoServiceTest {
         saveTodo()
      */
 
+    private static Object[][] saveTodoConstraintViolationExceptionDataProvider() {
+        return new Object[][] {
+                {TODO_MAP.get(KEY_EMPTY_TODO)},
+                {TODO_MAP.get(KEY_TODO_WITH_EMPTY_NAME)},
+                {TODO_MAP.get(KEY_TODO_WITHOUT_PRIORITY)}
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource("saveTodoConstraintViolationExceptionDataProvider")
+    public void saveTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
+        // GIVEN
+        createValidator();
+
+        // WHEN
+        todoService = new TodoService(todoRepository, mongoTemplate);
+
+        // THEN
+        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
+        assertFalse(todoViolations.isEmpty());
+
+        // VERIFY
+        verify(todoRepository, times(0)).save(any(Todo.class));
+    }
+
     @Test
     public void test_saveTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
         // GIVEN
@@ -213,57 +238,6 @@ public class TodoServiceTest {
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON), todoService.saveTodo(nullTodoFromJSON));
-
-        // VERIFY
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheGivenTodoFromJSONIsEmpty() {
-        // GIVEN
-        Todo emptyTodoFromJSON = TODO_MAP.get(KEY_EMPTY_TODO);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(emptyTodoFromJSON);
-        assertFalse(todoViolations.isEmpty());
-
-        // VERIFY
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenTheNameFieldIsEmptyInTheGivenTodoFromJSON() {
-        // GIVEN
-        Todo todoFromJSONWithEmptyName = TODO_MAP.get(KEY_TODO_WITH_EMPTY_NAME);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSONWithEmptyName);
-        assertFalse(todoViolations.isEmpty());
-
-        // VERIFY
-        verify(todoRepository, times(0)).save(any(Todo.class));
-    }
-
-    @Test
-    public void test_saveTodoShouldThrowAConstraintViolationException_WhenThePriorityFieldINullInTheGivenTodoFromJSON() {
-        // GIVEN
-        Todo todoFromJSONWithoutPriority = TODO_MAP.get(KEY_TODO_WITHOUT_PRIORITY);
-        createValidator();
-
-        // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
-
-        // THEN
-        Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSONWithoutPriority);
-        assertFalse(todoViolations.isEmpty());
 
         // VERIFY
         verify(todoRepository, times(0)).save(any(Todo.class));
