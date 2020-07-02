@@ -118,7 +118,7 @@ public class TodoService implements ITodoService {
      * @param todoFromJSON - the TodoObject used to update the already existing TodoObject
      * @return - a ResponseEntity with HttpStatus.BAD_REQUEST (400) if the given ID- or the given TodoFromJSON object is null,
      *           a ResponseEntity with HttpStatus.NOT_FOUND (404) if with the given ID no TodoObject was found,
-     *           else a ResponseEntity with HttpStatus.CREATED (201) with the updated TodoObject
+     *           else a ResponseEntity with HttpStatus.OK (200) with the updated TodoObject
      */
     @Override
     public ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON) {
@@ -135,7 +135,7 @@ public class TodoService implements ITodoService {
             LOGGER.info("Updating Todo!");
             Todo updatedTodo = updateTodo(optionalTodo.get(), todoFromJSON);
 
-            responseEntity = ResponseEntity.status(HttpStatus.CREATED).body(todoRepository.save(updatedTodo));
+            responseEntity = ResponseEntity.status(HttpStatus.OK).body(todoRepository.save(updatedTodo));
         } else {
             responseEntity = getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID);
         }
