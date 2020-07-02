@@ -7,6 +7,13 @@ spring:
     mongodb:
 #      host: mongodb # by default, mongodb is referred as localhost, but while it's in a container, localhost won't point to it, so the container's name should be given here
       host: localhost # use this when the app is used without Docker
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            clientId: 666e0f22b74c6e6770f1
+            clientSecret: 55a9a0de5a762efaff80325b27222b264f200ca9
 
 logging:
   level:
