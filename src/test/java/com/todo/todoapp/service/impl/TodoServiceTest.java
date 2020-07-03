@@ -355,7 +355,7 @@ public class TodoServiceTest {
         todoService = new TodoService(todoRepository, mongoTemplate);
 
         // THEN
-        assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(todoFromJSON), todoService.updateTodo(todoId, todoFromJSON));
+        assertEquals(ResponseEntity.status(HttpStatus.OK).body(todoFromJSON), todoService.updateTodo(todoId, todoFromJSON));
 
         // VERIFY
         verify(todoRepository, times(1)).findById(anyString());
