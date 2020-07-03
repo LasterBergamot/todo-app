@@ -16,22 +16,23 @@ import javax.validation.ConstraintViolationException;
 @ControllerAdvice
 public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(TodoExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TodoExceptionHandler.class);
 
     @ExceptionHandler(value = Exception.class)
     protected ResponseEntity<Object> handleExceptions(RuntimeException runtimeException, WebRequest webRequest) {
-        StringBuilder stringBuilder = new StringBuilder("Message: An unexpected exception occurred!");
+        StringBuilder stringBuilder = new StringBuilder("Error message: ");
 
         if (runtimeException instanceof DuplicateKeyException) {
-            stringBuilder = new StringBuilder("Message: A record with this key already exists!");
+            stringBuilder.append("A record with this key already exists!");
         } else if (runtimeException instanceof ConstraintViolationException) {
-            stringBuilder = new StringBuilder("Message: The given input is not valid!");
+            stringBuilder.append("The given input is not valid!");
+        } else {
+            stringBuilder.append("An unexpected exception occurred!");
         }
 
-        stringBuilder.append("\n").append("Original message: ").append(runtimeException.getMessage());
+        String errorMessage = stringBuilder.toString();
+        LOGGER.error(errorMessage);
 
-        LOGGER.error(stringBuilder.toString());
-
-        return handleExceptionInternal(runtimeException, stringBuilder.toString(), new HttpHeaders(), HttpStatus.BAD_REQUEST, webRequest);
+        return handleExceptionInternal(runtimeException, errorMessage, new HttpHeaders(), HttpStatus.BAD_REQUEST, webRequest);
     }
 }
