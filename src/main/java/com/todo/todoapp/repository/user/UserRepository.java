@@ -7,8 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
 
-//    @Query("SELECT u from User u WHERE u.github_id = ?1")
-    User findUserByGithubId(String githubId);
+    User findByGithubId(String githubId);
 
-    User findUserByGoogleId(String googleId);
+    User findByGoogleId(String googleId);
 }

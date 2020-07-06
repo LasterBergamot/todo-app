@@ -36,12 +36,20 @@ public class UserRestController {
             name = defaultOidcUser.getAttribute("name");
             id = defaultOidcUser.getAttribute("sub");
 
-            if (userRepository.findUserByGoogleId(id) == null) {
-                User user = new User.Builder()
-                        .withGoogleId(id)
-                        .build();
+            //Fixme
+            if (userRepository.findByGoogleId(id) == null) {
+                if (userRepository.findByGithubId(id) == null) {
+                    User user = new User.Builder()
+                            .withGoogleId(id)
+                            .build();
 
-                userRepository.save(user);
+                    userRepository.save(user);
+                } else {
+                    User savedUser = userRepository.findByGithubId(id);
+                    savedUser.setGoogleId(id);
+
+                    userRepository.save(savedUser);
+                }
             }
 
             // Github
@@ -51,7 +59,8 @@ public class UserRestController {
             name = defaultOAuth2User.getAttribute("login");
             id = Objects.requireNonNull(defaultOAuth2User.getAttribute("id")).toString();
 
-            if (userRepository.findUserByGithubId(id) == null) {
+            //Fixme: fix this by checking for the Google id as well (or with something else)
+            if (userRepository.findByGithubId(id) == null) {
                 User user = new User.Builder()
                         .withGithubId(id)
                         .build();

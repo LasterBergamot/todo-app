@@ -96,21 +96,21 @@ public class TodoService implements ITodoService {
             OidcUser defaultOidcUser = (OidcUser) principal;
 
             id = Objects.requireNonNull(defaultOidcUser.getAttribute("sub")).toString();
-            user = userRepository.findUserByGoogleId(id);
+            user = userRepository.findByGoogleId(id);
 
             // Github
         } else if (principal instanceof DefaultOAuth2User) {
             DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
 
             id = Objects.requireNonNull(defaultOAuth2User.getAttribute("id")).toString();
-            user = userRepository.findUserByGithubId(id);
+            user = userRepository.findByGithubId(id);
         }
 
         if (user == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
         }
 
-        return ResponseEntity.ok(todoRepository.getTodosOfUser(user.getId()));
+        return ResponseEntity.ok(todoRepository.findByUserId(user.getId()));
     }
 
     /**

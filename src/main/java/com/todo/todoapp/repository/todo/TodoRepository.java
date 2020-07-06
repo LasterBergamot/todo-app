@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface TodoRepository extends MongoRepository<Todo, String> {
 
-    @Query("SELECT t FROM Todo t WHERE t.user_id = ?1")
-    List<Todo> getTodosOfUser(String userId);
+    @Query("{ 'user_id' : ?0 }")
+    List<Todo> findByUserId(String userId);
 
 }
