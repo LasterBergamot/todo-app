@@ -12,21 +12,23 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.validation.ConstraintViolationException;
+import java.nio.file.AccessDeniedException;
 
 @ControllerAdvice
 public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoExceptionHandler.class);
 
-    //TODO: AccessDeniedException
     @ExceptionHandler(value = Exception.class)
-    protected ResponseEntity<Object> handleExceptions(RuntimeException runtimeException, WebRequest webRequest) {
+    protected ResponseEntity<Object> handleExceptions(Exception runtimeException, WebRequest webRequest) {
         StringBuilder stringBuilder = new StringBuilder("Error message: ");
 
         if (runtimeException instanceof DuplicateKeyException) {
             stringBuilder.append("A record with this key already exists!");
         } else if (runtimeException instanceof ConstraintViolationException) {
             stringBuilder.append("The given input is not valid!");
+        }  else if (runtimeException instanceof AccessDeniedException) {
+          stringBuilder.append("You don't have access to this operation!");
         } else {
             stringBuilder.append("An unexpected exception occurred!");
         }
