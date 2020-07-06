@@ -16,14 +16,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         // @formatter:off
         http.authorizeRequests(
-                authorize -> authorize.antMatchers("/", "/error", "/webjars/**", "/todos").permitAll()
+                authorize -> authorize.antMatchers("/", "/error", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
         ).logout(
                 logout -> logout.logoutSuccessUrl("/").permitAll()
         ).csrf(
          csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         ).exceptionHandling(
-                exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.BAD_REQUEST))
         ).oauth2Login();
         //formatter:on
     }

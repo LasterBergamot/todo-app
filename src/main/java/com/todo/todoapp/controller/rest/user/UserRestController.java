@@ -26,26 +26,27 @@ public class UserRestController {
 
     @GetMapping("/user")
     public Map<String, Object> user(@AuthenticationPrincipal OAuth2User principal) {
+        String id, email;
         String name = "";
-        String id = "";
 
         // Google
         if (principal instanceof OidcUser) {
             OidcUser defaultOidcUser = (OidcUser) principal;
 
-            name = defaultOidcUser.getAttribute("name");
-            id = defaultOidcUser.getAttribute("sub");
+            id = Objects.requireNonNull(defaultOidcUser.getAttribute("sub")).toString();
+            name = Objects.requireNonNull(defaultOidcUser.getAttribute("name")).toString();
+            email = Objects.requireNonNull(defaultOidcUser.getAttribute("email")).toString();
 
-            //Fixme
-            if (userRepository.findByGoogleId(id) == null) {
-                if (userRepository.findByGithubId(id) == null) {
-                    User user = new User.Builder()
-                            .withGoogleId(id)
-                            .build();
+            if (userRepository.findByEmail(email) == null) {
+                User user = new User.Builder()
+                        .withEmail(email)
+                        .withGoogleId(id)
+                        .build();
 
-                    userRepository.save(user);
-                } else {
-                    User savedUser = userRepository.findByGithubId(id);
+                userRepository.save(user);
+            } else {
+                if (userRepository.findByGoogleId(id) == null) {
+                    User savedUser = userRepository.findByEmail(email);
                     savedUser.setGoogleId(id);
 
                     userRepository.save(savedUser);
@@ -56,16 +57,24 @@ public class UserRestController {
         } else if (principal instanceof DefaultOAuth2User) {
             DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
 
-            name = defaultOAuth2User.getAttribute("login");
             id = Objects.requireNonNull(defaultOAuth2User.getAttribute("id")).toString();
+            name = Objects.requireNonNull(defaultOAuth2User.getAttribute("login")).toString();
+            email = Objects.requireNonNull(defaultOAuth2User.getAttribute("email")).toString();
 
-            //Fixme: fix this by checking for the Google id as well (or with something else)
-            if (userRepository.findByGithubId(id) == null) {
+            if (userRepository.findByEmail(email) == null) {
                 User user = new User.Builder()
+                        .withEmail(email)
                         .withGithubId(id)
                         .build();
 
                 userRepository.save(user);
+            } else {
+                if (userRepository.findByGithubId(id) == null) {
+                    User savedUser = userRepository.findByEmail(email);
+                    savedUser.setGithubId(id);
+
+                    userRepository.save(savedUser);
+                }
             }
         }
 
