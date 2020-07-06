@@ -1,9 +1,10 @@
-package com.todo.todoapp.service.impl;
+package com.todo.todoapp.service.todo.impl;
 
 import com.todo.todoapp.model.todo.Priority;
 import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.model.todo.builder.TodoBuilder;
-import com.todo.todoapp.repository.TodoRepository;
+import com.todo.todoapp.repository.todo.TodoRepository;
+import com.todo.todoapp.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,9 +24,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
@@ -119,6 +120,7 @@ public class TodoServiceTest {
     private TodoService todoService;
 
     private TodoRepository todoRepository;
+    private UserRepository userRepository;
     private MongoTemplate mongoTemplate;
 
     private Validator validator;
@@ -126,6 +128,7 @@ public class TodoServiceTest {
     @BeforeEach
     public void setUp() {
         todoRepository = mock(TodoRepository.class);
+        userRepository = mock(UserRepository.class);
         mongoTemplate = mock(MongoTemplate.class);
     }
 
@@ -148,7 +151,7 @@ public class TodoServiceTest {
         // WHEN
         when(todoRepository.findAll()).thenReturn(todoList);
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.ok(todoList), todoService.getTodos());
@@ -174,7 +177,7 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.getTodo(todoId));
@@ -198,7 +201,7 @@ public class TodoServiceTest {
         // WHEN
         when(todoRepository.findById(todoId)).thenReturn(optionalStoredTodo);
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(expectedResponseEntity, todoService.getTodo(todoId));
@@ -226,7 +229,7 @@ public class TodoServiceTest {
         createValidator();
 
         // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
@@ -242,7 +245,7 @@ public class TodoServiceTest {
         Todo nullTodoFromJSON = null;
 
         // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_JSON), todoService.saveTodo(nullTodoFromJSON));
@@ -259,7 +262,7 @@ public class TodoServiceTest {
         // WHEN
         when(todoRepository.save(todoFromJSON)).thenReturn(todoFromJSON);
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.CREATED).body(todoFromJSON), todoService.saveTodo(todoFromJSON));
@@ -286,7 +289,7 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(expectedResponseEntity, todoService.updateTodo(todoId, todoFromJSON));
@@ -311,7 +314,7 @@ public class TodoServiceTest {
         createValidator();
 
         // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         Set<ConstraintViolation<Todo>> todoViolations = validator.validate(todoFromJSON);
@@ -331,7 +334,7 @@ public class TodoServiceTest {
         // WHEN
         when(todoRepository.findById(nonExistingTodoId)).thenReturn(Optional.empty());
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.updateTodo(nonExistingTodoId, todoFromJSON));
@@ -352,7 +355,7 @@ public class TodoServiceTest {
         when(todoRepository.findById(todoId)).thenReturn(Optional.of(storedTodo));
         when(todoRepository.save(todoFromJSON)).thenReturn(todoFromJSON);
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.OK).body(todoFromJSON), todoService.updateTodo(todoId, todoFromJSON));
@@ -379,7 +382,7 @@ public class TodoServiceTest {
         // GIVEN
 
         // WHEN
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_NULL_OR_EMPTY_ID), todoService.deleteTodo(todoId));
@@ -397,7 +400,7 @@ public class TodoServiceTest {
         // WHEN
         when(todoRepository.findById(nonExistingTodoId)).thenReturn(Optional.empty());
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID), todoService.deleteTodo(nonExistingTodoId));
@@ -417,7 +420,7 @@ public class TodoServiceTest {
         when(todoRepository.findById(todoId)).thenReturn(Optional.of(storedTodo));
         doNothing().when(todoRepository).deleteById(todoId);
 
-        todoService = new TodoService(todoRepository, mongoTemplate);
+        todoService = getTodoService();
 
         // THEN
         assertEquals(new ResponseEntity<>(HttpStatus.OK), todoService.deleteTodo(todoId));
@@ -430,5 +433,9 @@ public class TodoServiceTest {
     private void createValidator() {
         ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
+    }
+
+    private TodoService getTodoService() {
+        return new TodoService(todoRepository, userRepository, mongoTemplate);
     }
 }

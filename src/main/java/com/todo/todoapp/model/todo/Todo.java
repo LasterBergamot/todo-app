@@ -16,6 +16,11 @@ public class Todo {
     @Id
     private final String id;
 
+    @NotNull
+    @NotEmpty
+    @Field("user_id")
+    private final String userId;
+
     @NotEmpty
     @NotNull
     @Field("name")
@@ -30,8 +35,9 @@ public class Todo {
     @Valid
     private Priority priority;
 
-    public Todo(String id, @NotEmpty @NotNull @Valid String name, LocalDate deadline, @NotNull @Valid Priority priority) {
+    public Todo(String id, @NotNull @NotEmpty String userId, @NotEmpty @NotNull @Valid String name, LocalDate deadline, @NotNull @Valid Priority priority) {
         this.id = id;
+        this.userId = userId;
         this.name = name;
         this.deadline = deadline;
         this.priority = priority;
@@ -65,12 +71,17 @@ public class Todo {
         this.priority = priority;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Todo todo = (Todo) o;
         return Objects.equals(id, todo.id) &&
+                Objects.equals(userId, todo.userId) &&
                 Objects.equals(name, todo.name) &&
                 Objects.equals(deadline, todo.deadline) &&
                 priority == todo.priority;
@@ -78,13 +89,14 @@ public class Todo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, deadline, priority);
+        return Objects.hash(id, userId, name, deadline, priority);
     }
 
     @Override
     public String toString() {
         return "Todo{" +
                 "id='" + id + '\'' +
+                ", userId='" + userId + '\'' +
                 ", name='" + name + '\'' +
                 ", deadline=" + deadline +
                 ", priority=" + priority +

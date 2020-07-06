@@ -8,12 +8,19 @@ import java.time.LocalDate;
 public class TodoBuilder {
 
     private String id;
+    private String userId;
     private String name;
     private LocalDate deadline;
     private Priority priority;
 
     public TodoBuilder withId(String id) {
         this.id = id;
+
+        return this;
+    }
+
+    public TodoBuilder withUserId(String userId) {
+        this.userId = userId;
 
         return this;
     }
@@ -37,6 +44,6 @@ public class TodoBuilder {
     }
 
     public Todo build() {
-        return new Todo(id, name, deadline, priority);
+        return new Todo(id, userId, name, deadline, priority);
     }
 }

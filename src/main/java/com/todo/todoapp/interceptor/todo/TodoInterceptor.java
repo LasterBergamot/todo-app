@@ -1,4 +1,4 @@
-package com.todo.todoapp.interceptor;
+package com.todo.todoapp.interceptor.todo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +17,9 @@ public class TodoInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object handler) {
         LOGGER.info("Status: {}, before: {} - {}", httpServletResponse.getStatus(), httpServletRequest.getRequestURI(), httpServletRequest.getMethod());
+
+        LOGGER.info("Does the user has the role ROLE_USER? Answer: {}", httpServletRequest.isUserInRole("ROLE_USER"));
+        LOGGER.info("Does the user has the role GITHUB_USER? Answer: {}", httpServletRequest.isUserInRole("GITHUB_USER"));
 
         return true;
     }

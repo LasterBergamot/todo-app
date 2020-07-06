@@ -18,6 +18,7 @@ public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoExceptionHandler.class);
 
+    //TODO: AccessDeniedException
     @ExceptionHandler(value = Exception.class)
     protected ResponseEntity<Object> handleExceptions(RuntimeException runtimeException, WebRequest webRequest) {
         StringBuilder stringBuilder = new StringBuilder("Error message: ");

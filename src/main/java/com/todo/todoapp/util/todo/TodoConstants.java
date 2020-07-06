@@ -1,4 +1,4 @@
-package com.todo.todoapp.util;
+package com.todo.todoapp.util.todo;
 
 public class TodoConstants {
 

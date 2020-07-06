@@ -1,6 +1,6 @@
 package com.todo.todoapp.config;
 
-import com.todo.todoapp.interceptor.TodoInterceptor;
+import com.todo.todoapp.interceptor.todo.TodoInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

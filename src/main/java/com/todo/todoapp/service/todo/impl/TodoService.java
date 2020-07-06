@@ -1,8 +1,10 @@
-package com.todo.todoapp.service.impl;
+package com.todo.todoapp.service.todo.impl;
 
 import com.todo.todoapp.model.todo.Todo;
-import com.todo.todoapp.repository.TodoRepository;
-import com.todo.todoapp.service.ITodoService;
+import com.todo.todoapp.model.user.User;
+import com.todo.todoapp.repository.todo.TodoRepository;
+import com.todo.todoapp.repository.user.UserRepository;
+import com.todo.todoapp.service.todo.ITodoService;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,17 +14,24 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
 
 @Service
 @Validated
@@ -31,12 +40,14 @@ public class TodoService implements ITodoService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoService.class);
 
     private final TodoRepository todoRepository;
+    private final UserRepository userRepository;
 
     private final MongoTemplate mongoTemplate;
 
     @Autowired
-    public TodoService(TodoRepository todoRepository, MongoTemplate mongoTemplate) {
+    public TodoService(TodoRepository todoRepository, UserRepository userRepository, MongoTemplate mongoTemplate) {
         this.todoRepository = todoRepository;
+        this.userRepository = userRepository;
         this.mongoTemplate = mongoTemplate;
     }
 
@@ -64,6 +75,42 @@ public class TodoService implements ITodoService {
         LOGGER.info("Getting all Todos from the database!");
 
         return ResponseEntity.ok(todoRepository.findAll());
+    }
+
+    @Override
+    public ResponseEntity<List<Todo>> getTodos(SecurityContext sprintSecurityContext) {
+        LOGGER.info("Getting Todos for the given user!");
+
+        if (sprintSecurityContext == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
+        }
+
+        OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) sprintSecurityContext.getAuthentication();
+        OAuth2User principal = oAuth2AuthenticationToken.getPrincipal();
+
+        String id;
+        User user = null;
+
+        // Google
+        if (principal instanceof OidcUser) {
+            OidcUser defaultOidcUser = (OidcUser) principal;
+
+            id = Objects.requireNonNull(defaultOidcUser.getAttribute("sub")).toString();
+            user = userRepository.findUserByGoogleId(id);
+
+            // Github
+        } else if (principal instanceof DefaultOAuth2User) {
+            DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
+
+            id = Objects.requireNonNull(defaultOAuth2User.getAttribute("id")).toString();
+            user = userRepository.findUserByGithubId(id);
+        }
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
+        }
+
+        return ResponseEntity.ok(todoRepository.getTodosOfUser(user.getId()));
     }
 
     /**
