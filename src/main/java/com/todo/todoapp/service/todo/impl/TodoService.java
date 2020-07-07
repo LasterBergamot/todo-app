@@ -5,6 +5,7 @@ import com.todo.todoapp.model.user.User;
 import com.todo.todoapp.repository.todo.TodoRepository;
 import com.todo.todoapp.repository.user.UserRepository;
 import com.todo.todoapp.service.todo.ITodoService;
+import com.todo.todoapp.util.TodoUtil;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -185,7 +186,7 @@ public class TodoService implements ITodoService {
 
         if (optionalTodo.isPresent()) {
             LOGGER.info("Updating Todo!");
-            Todo updatedTodo = updateTodo(optionalTodo.get(), todoFromJSON);
+            Todo updatedTodo = TodoUtil.updateTodo(optionalTodo.get(), todoFromJSON);
 
             responseEntity = ResponseEntity.status(HttpStatus.OK).body(todoRepository.save(updatedTodo));
         } else {
@@ -193,16 +194,6 @@ public class TodoService implements ITodoService {
         }
 
         return responseEntity;
-    }
-
-    //TODO: create a util class for this?
-    //TODO: create a new Todo object instead of modifying the already existing one?
-    private Todo updateTodo(Todo todoFromRepo, Todo todoFromJSON) {
-        todoFromRepo.setName(todoFromJSON.getName());
-        todoFromRepo.setDeadline(todoFromJSON.getDeadline());
-        todoFromRepo.setPriority(todoFromJSON.getPriority());
-
-        return todoFromRepo;
     }
 
     /**
