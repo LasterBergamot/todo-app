@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class UserService implements IUserService {
@@ -25,6 +26,7 @@ public class UserService implements IUserService {
     private static final String COLLECTION_NAME_USER = "User";
 
     private static final String ATTRIBUTE_NAME = "name";
+    private static final String ATTRIBUTE_LOGIN = "login";
     private static final String ATTRIBUTE_SUB = "sub";
     private static final String ATTRIBUTE_EMAIL = "email";
     private static final String ATTRIBUTE_ID = "id";
@@ -65,19 +67,43 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String handleUser(OAuth2User principal) {
-        String name =  Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_NAME)).toString();
+    public String getUsername(OAuth2User principal) {
+        checkPrincipal(principal);
 
-        if (principal instanceof OidcUser) {
-            handleGoogleLogin((OidcUser) principal);
-        } else if (principal instanceof DefaultOAuth2User) {
-            handleGithubLogin((DefaultOAuth2User) principal);
-        }
-
-        return name;
+        return principal instanceof OidcUser
+                ? Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_NAME)).toString()
+                : Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_LOGIN)).toString();
     }
 
-    private void handleGoogleLogin(OidcUser oidcUser) {
+    private void checkPrincipal(OAuth2User principal) {
+        if (Optional.ofNullable(principal).isEmpty()) {
+            LOGGER.error("The given principal was null");
+
+            throw new IllegalArgumentException("The given principal was null!");
+        }
+    }
+
+    @Override
+    public User saveUser(OAuth2User principal) {
+        checkPrincipal(principal);
+
+        User returnedUser = null;
+
+        if (principal instanceof OidcUser) {
+            returnedUser = handleGoogleLogin((OidcUser) principal);
+        } else if (principal instanceof DefaultOAuth2User) {
+            returnedUser = handleGithubLogin((DefaultOAuth2User) principal);
+        }
+
+        if (returnedUser == null) {
+            throw new IllegalArgumentException("There's no available service right now to save the user!");
+        }
+
+        return returnedUser;
+    }
+
+    private User handleGoogleLogin(OidcUser oidcUser) {
+        User returnedUser;
         String id = Objects.requireNonNull(oidcUser.getAttribute(ATTRIBUTE_SUB)).toString();
         String email = Objects.requireNonNull(oidcUser.getAttribute(ATTRIBUTE_EMAIL)).toString();
 
@@ -87,18 +113,22 @@ public class UserService implements IUserService {
                     .withGoogleId(id)
                     .build();
 
-            userRepository.save(user);
+            returnedUser = userRepository.save(user);
         } else {
-            if (userRepository.findByGoogleId(id) == null) {
-                User savedUser = userRepository.findByEmail(email);
-                savedUser.setGoogleId(id);
+            returnedUser = userRepository.findByEmail(email);
 
-                userRepository.save(savedUser);
+            if (userRepository.findByGoogleId(id) == null) {
+                returnedUser.setGoogleId(id);
+
+                returnedUser = userRepository.save(returnedUser);
             }
         }
+
+        return returnedUser;
     }
 
-    private void handleGithubLogin(DefaultOAuth2User defaultOAuth2User) {
+    private User handleGithubLogin(DefaultOAuth2User defaultOAuth2User) {
+        User returnedUser;
         String id = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_ID)).toString();
         String email = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_EMAIL)).toString();
 
@@ -108,14 +138,17 @@ public class UserService implements IUserService {
                     .withGithubId(id)
                     .build();
 
-            userRepository.save(user);
+            returnedUser = userRepository.save(user);
         } else {
-            if (userRepository.findByGithubId(id) == null) {
-                User savedUser = userRepository.findByEmail(email);
-                savedUser.setGithubId(id);
+            returnedUser = userRepository.findByEmail(email);
 
-                userRepository.save(savedUser);
+            if (userRepository.findByGithubId(id) == null) {
+                returnedUser.setGithubId(id);
+
+                returnedUser = userRepository.save(returnedUser);
             }
         }
+
+        return returnedUser;
     }
 }
