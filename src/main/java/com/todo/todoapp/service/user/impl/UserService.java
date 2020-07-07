@@ -13,8 +13,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Objects;
-import java.util.Optional;
 
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_EMAIL;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_ID;
@@ -22,7 +20,7 @@ import static com.todo.todoapp.util.Constants.ATTRIBUTE_LOGIN;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
 import static com.todo.todoapp.util.Constants.COLLECTION_NAME_USER;
-import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_WAS_NULL;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
 import static com.todo.todoapp.util.Constants.INDEX_NAME_USER_GITHUB_ID_INDEX;
 import static com.todo.todoapp.util.Constants.INDEX_NAME_USER_GOOGLE_ID_INDEX;
@@ -52,18 +50,48 @@ public class UserService implements IUserService {
     @Override
     public String getUsername(OAuth2User principal) {
         checkPrincipal(principal);
+        checkPrincipalAttributes(principal);
 
-        //TODO: use something else rather than Objects.requireNonNull() ??
         return principal instanceof OidcUser
-                ? Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_NAME)).toString()
-                : Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_LOGIN)).toString();
+                ? principal.getAttribute(ATTRIBUTE_NAME).toString()
+                : principal.getAttribute(ATTRIBUTE_LOGIN).toString();
     }
 
     private void checkPrincipal(OAuth2User principal) {
-        if (Optional.ofNullable(principal).isEmpty()) {
+        if (principal == null) {
             LOGGER.error("The given principal was null");
 
-            throw new IllegalArgumentException(ERR_MSG_THE_GIVEN_PRINCIPAL_WAS_NULL);
+            throw new IllegalArgumentException(ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL);
+        }
+    }
+
+    private void checkPrincipalAttributes(OAuth2User principal) {
+        if (principal.getAttribute(ATTRIBUTE_NAME) == null) {
+            throw new IllegalArgumentException("The principal's name attribute is null!");
+        } else if (principal.getAttribute(ATTRIBUTE_LOGIN) == null) {
+            throw new IllegalArgumentException("The principal's login attribute is null!");
+        }
+
+        if (principal instanceof OidcUser) {
+            checkGoogleAttributes((OidcUser) principal);
+        } else if (principal instanceof DefaultOAuth2User) {
+            checkGithubAttributes((DefaultOAuth2User) principal);
+        }
+    }
+
+    private void checkGoogleAttributes(OidcUser oidcUser) {
+        if (oidcUser.getAttribute(ATTRIBUTE_SUB) == null) {
+            throw new IllegalArgumentException("The principal's sub attribute is null!");
+        } else if (oidcUser.getAttribute(ATTRIBUTE_EMAIL) == null) {
+            throw new IllegalArgumentException("The principal's email attribute is null!");
+        }
+    }
+
+    private void checkGithubAttributes(DefaultOAuth2User defaultOAuth2User) {
+        if (defaultOAuth2User.getAttribute(ATTRIBUTE_ID) == null) {
+            throw new IllegalArgumentException("The principal's id attribute is null!");
+        } else if (defaultOAuth2User.getAttribute(ATTRIBUTE_EMAIL) == null) {
+            throw new IllegalArgumentException("The principal's email attribute is null!");
         }
     }
 
@@ -94,8 +122,8 @@ public class UserService implements IUserService {
 
     private User handleGoogleLogin(OidcUser oidcUser) {
         User returnedUser;
-        String id = Objects.requireNonNull(oidcUser.getAttribute(ATTRIBUTE_SUB)).toString();
-        String email = Objects.requireNonNull(oidcUser.getAttribute(ATTRIBUTE_EMAIL)).toString();
+        String id = oidcUser.getAttribute(ATTRIBUTE_SUB).toString();
+        String email = oidcUser.getAttribute(ATTRIBUTE_EMAIL).toString();
 
         if (userRepository.findByEmail(email) == null) {
             User user = new User.Builder()
@@ -119,8 +147,8 @@ public class UserService implements IUserService {
 
     private User handleGithubLogin(DefaultOAuth2User defaultOAuth2User) {
         User returnedUser;
-        String id = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_ID)).toString();
-        String email = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_EMAIL)).toString();
+        String id = defaultOAuth2User.getAttribute(ATTRIBUTE_ID).toString();
+        String email = defaultOAuth2User.getAttribute(ATTRIBUTE_EMAIL).toString();
 
         if (userRepository.findByEmail(email) == null) {
             User user = new User.Builder()
