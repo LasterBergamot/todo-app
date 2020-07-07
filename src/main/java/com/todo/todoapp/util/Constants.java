@@ -9,6 +9,8 @@ public class Constants {
     public static final String ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID = "No Todo was found with the given ID!";
     public static final String ERR_MSG_THE_GIVEN_PRINCIPAL_WAS_NULL = "The given principal was null!";
     public static final String ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE = "The given user could not be saved to any available service!";
+    public static final String ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN = "Currently no user is logged in!";
+    public static final String ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE = "Currently the given user does not exist in the database!";
 
     public static final String COLLECTION_NAME_TODO = "Todo";
     public static final String COLLECTION_NAME_USER = "User";

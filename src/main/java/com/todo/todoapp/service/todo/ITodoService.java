@@ -10,7 +10,7 @@ import java.util.List;
 public interface ITodoService {
 
     ResponseEntity<List<Todo>> getTodos();
-    ResponseEntity<List<Todo>> getTodos(SecurityContext sprintSecurityContext);
+    ResponseEntity<Object> getTodos(SecurityContext sprintSecurityContext);
     ResponseEntity<Object> getTodo(String todoId);
     ResponseEntity<Object> saveTodo(@Valid Todo todoFromJSON);
     ResponseEntity<Object> updateTodo(String todoId, @Valid Todo todoFromJSON);

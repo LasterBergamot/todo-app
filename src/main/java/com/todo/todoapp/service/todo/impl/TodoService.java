@@ -23,7 +23,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,6 +30,8 @@ import java.util.Optional;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_ID;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
 import static com.todo.todoapp.util.Constants.COLLECTION_NAME_TODO;
+import static com.todo.todoapp.util.Constants.ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN;
+import static com.todo.todoapp.util.Constants.ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE;
 import static com.todo.todoapp.util.Constants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
 import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_JSON;
 import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_OR_EMPTY_ID;
@@ -71,40 +72,57 @@ public class TodoService implements ITodoService {
         return ResponseEntity.ok(todoRepository.findAll());
     }
 
+    /**
+     * Return with all of the Todos for the given user.
+     *
+     * @param springSecurityContext - the object which holds the currently logged in user
+     * @return - a ResponseEntity with all of the Todos for the given user
+     *           if the given SecurityContext does not exist, it will return with a ResponseEntity with HttpStatus.BAD_REQUEST (400)
+     *           if no user was found in the database, then it will also return with a ResponseEntity with HttpStatus.NOT_FOUND (404)
+     */
     @Override
-    public ResponseEntity<List<Todo>> getTodos(SecurityContext sprintSecurityContext) {
+    public ResponseEntity<Object> getTodos(SecurityContext springSecurityContext) {
         LOGGER.info("Getting Todos for the given user!");
 
-        if (sprintSecurityContext == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
+        if (springSecurityContext == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN);
         }
 
-        OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) sprintSecurityContext.getAuthentication();
-        OAuth2User principal = oAuth2AuthenticationToken.getPrincipal();
-
-        String id;
-        User user = null;
-
-        // Google
-        if (principal instanceof OidcUser) {
-            OidcUser defaultOidcUser = (OidcUser) principal;
-
-            id = Objects.requireNonNull(defaultOidcUser.getAttribute(ATTRIBUTE_SUB)).toString();
-            user = userRepository.findByGoogleId(id);
-
-            // Github
-        } else if (principal instanceof DefaultOAuth2User) {
-            DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
-
-            id = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_ID)).toString();
-            user = userRepository.findByGithubId(id);
-        }
+        User user = getUserFromDatabase(springSecurityContext);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE);
         }
 
         return ResponseEntity.ok(todoRepository.findByUserId(user.getId()));
+    }
+
+    private User getUserFromDatabase(SecurityContext springSecurityContext) {
+        User user = null;
+        OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) springSecurityContext.getAuthentication();
+        OAuth2User principal = oAuth2AuthenticationToken.getPrincipal();
+
+        if (principal instanceof OidcUser) {
+            user = handleGoogle(principal);
+        } else if (principal instanceof DefaultOAuth2User) {
+            user = handleGithub(principal);
+        }
+
+        return user;
+    }
+
+    private User handleGoogle(OAuth2User principal) {
+        OidcUser defaultOidcUser = (OidcUser) principal;
+        String googleId = Objects.requireNonNull(defaultOidcUser.getAttribute(ATTRIBUTE_SUB)).toString();
+
+        return userRepository.findByGoogleId(googleId);
+    }
+
+    private User handleGithub(OAuth2User principal) {
+        DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
+        String githubId = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_ID)).toString();
+
+        return userRepository.findByGithubId(githubId);
     }
 
     /**
