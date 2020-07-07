@@ -102,4 +102,46 @@ public class Todo {
                 ", priority=" + priority +
                 '}';
     }
+
+    public static class Builder {
+        private String id;
+        private String userId;
+        private String name;
+        private LocalDate deadline;
+        private Priority priority;
+
+        public Todo.Builder withId(String id) {
+            this.id = id;
+
+            return this;
+        }
+
+        public Todo.Builder withUserId(String userId) {
+            this.userId = userId;
+
+            return this;
+        }
+
+        public Todo.Builder withName(String name) {
+            this.name = name;
+
+            return this;
+        }
+
+        public Todo.Builder withDeadline(LocalDate deadline) {
+            this.deadline = deadline;
+
+            return this;
+        }
+
+        public Todo.Builder withPriority(Priority priority) {
+            this.priority = priority;
+
+            return this;
+        }
+
+        public Todo build() {
+            return new Todo(id, userId, name, deadline, priority);
+        }
+    }
 }
