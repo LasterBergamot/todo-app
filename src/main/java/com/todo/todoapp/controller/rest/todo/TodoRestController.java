@@ -1,13 +1,22 @@
-package com.todo.todoapp.controller.rest;
+package com.todo.todoapp.controller.rest.todo;
 
 import com.todo.todoapp.model.todo.Todo;
-import com.todo.todoapp.service.ITodoService;
+import com.todo.todoapp.service.todo.ITodoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
@@ -31,11 +40,20 @@ public class TodoRestController {
         this.todoService = todoService;
     }
 
-    @GetMapping(GET_MAPPING_TODOS)
-    public ResponseEntity<List<Todo>> getTodos() {
-        LOGGER.info("Getting Todos from the database!");
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/todosAll")
+    public ResponseEntity<List<Todo>> getAllTodos() {
+        LOGGER.info("Getting all Todos from the database!");
 
         return todoService.getTodos();
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping(GET_MAPPING_TODOS)
+    public ResponseEntity<List<Todo>> getTodos(HttpSession session) {
+        LOGGER.info("Getting Todos for the user from the database!");
+
+        return todoService.getTodos((SecurityContext) session.getAttribute("SPRING_SECURITY_CONTEXT"));
     }
 
     @GetMapping(GET_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)

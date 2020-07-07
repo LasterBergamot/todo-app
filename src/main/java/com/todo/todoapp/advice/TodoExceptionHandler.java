@@ -12,6 +12,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.validation.ConstraintViolationException;
+import java.nio.file.AccessDeniedException;
 
 @ControllerAdvice
 public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
@@ -19,14 +20,28 @@ public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoExceptionHandler.class);
 
     @ExceptionHandler(value = Exception.class)
-    protected ResponseEntity<Object> handleExceptions(RuntimeException runtimeException, WebRequest webRequest) {
+    protected ResponseEntity<Object> handleExceptions(Exception runtimeException, WebRequest webRequest) {
         StringBuilder stringBuilder = new StringBuilder("Error message: ");
 
         if (runtimeException instanceof DuplicateKeyException) {
+            logException(runtimeException);
+
             stringBuilder.append("A record with this key already exists!");
         } else if (runtimeException instanceof ConstraintViolationException) {
+            logException(runtimeException);
+
             stringBuilder.append("The given input is not valid!");
+        }  else if (runtimeException instanceof AccessDeniedException) {
+            logException(runtimeException);
+
+            stringBuilder.append("You don't have access to this operation!");
+        } else if (runtimeException instanceof NullPointerException) {
+            logException(runtimeException);
+
+            stringBuilder.append("Sorry, something went wrong!");
         } else {
+            logException(runtimeException);
+
             stringBuilder.append("An unexpected exception occurred!");
         }
 
@@ -34,5 +49,9 @@ public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
         LOGGER.error(errorMessage);
 
         return handleExceptionInternal(runtimeException, errorMessage, new HttpHeaders(), HttpStatus.BAD_REQUEST, webRequest);
+    }
+
+    private void logException(Exception runtimeException) {
+        LOGGER.error("{} occurred - cause: {} - message: {}", runtimeException.getClass().getSimpleName(), runtimeException.getCause(), runtimeException.getMessage());
     }
 }
