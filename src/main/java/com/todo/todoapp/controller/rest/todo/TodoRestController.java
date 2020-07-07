@@ -41,9 +41,17 @@ public class TodoRestController {
     }
 
     @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/todosAll")
+    public ResponseEntity<List<Todo>> getAllTodos() {
+        LOGGER.info("Getting all Todos from the database!");
+
+        return todoService.getTodos();
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping(GET_MAPPING_TODOS)
     public ResponseEntity<List<Todo>> getTodos(HttpSession session) {
-        LOGGER.info("Getting Todos from the database!");
+        LOGGER.info("Getting Todos for the user from the database!");
 
         return todoService.getTodos((SecurityContext) session.getAttribute("SPRING_SECURITY_CONTEXT"));
     }
