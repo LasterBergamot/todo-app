@@ -43,8 +43,8 @@ public class UserRestController {
     //TODO: should be a POST method
     @PreAuthorize(PRE_AUTHORIZE_ROLE_USER)
     @GetMapping(GET_MAPPING_HANDLE_USER)
-    public Map<String, Object> saveUser(@AuthenticationPrincipal OAuth2User principal) {
-        LOGGER.info("Saving user!");
+    public Map<String, Object> handleUser(@AuthenticationPrincipal OAuth2User principal) {
+        LOGGER.info("Handling user!");
 
         return Collections.singletonMap(KEY_USER, userService.handleUser(principal));
     }
