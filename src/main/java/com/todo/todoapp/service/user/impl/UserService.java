@@ -67,19 +67,25 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User saveUser(OAuth2User principal) {
+    public User handleUser(OAuth2User principal) {
         checkPrincipal(principal);
 
+        User returnedUser = handleLogin(principal);
+
+        if (returnedUser == null) {
+            throw new IllegalArgumentException(ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE);
+        }
+
+        return returnedUser;
+    }
+
+    private User handleLogin(OAuth2User principal) {
         User returnedUser = null;
 
         if (principal instanceof OidcUser) {
             returnedUser = handleGoogleLogin((OidcUser) principal);
         } else if (principal instanceof DefaultOAuth2User) {
             returnedUser = handleGithubLogin((DefaultOAuth2User) principal);
-        }
-
-        if (returnedUser == null) {
-            throw new IllegalArgumentException(ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE);
         }
 
         return returnedUser;

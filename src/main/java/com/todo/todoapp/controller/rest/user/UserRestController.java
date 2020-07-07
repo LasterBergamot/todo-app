@@ -19,7 +19,7 @@ public class UserRestController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRestController.class);
 
     private static final String GET_MAPPING_USERNAME = "/username";
-    private static final String GET_MAPPING_SAVE_USER = "/saveUser";
+    private static final String GET_MAPPING_HANDLE_USER = "/handleUser";
 
     private static final String KEY_NAME = "name";
     private static final String KEY_USER = "user";
@@ -42,10 +42,10 @@ public class UserRestController {
 
     //TODO: should be a POST method
     @PreAuthorize(PRE_AUTHORIZE_ROLE_USER)
-    @GetMapping(GET_MAPPING_SAVE_USER)
+    @GetMapping(GET_MAPPING_HANDLE_USER)
     public Map<String, Object> saveUser(@AuthenticationPrincipal OAuth2User principal) {
         LOGGER.info("Saving user!");
 
-        return Collections.singletonMap(KEY_USER, userService.saveUser(principal));
+        return Collections.singletonMap(KEY_USER, userService.handleUser(principal));
     }
 }

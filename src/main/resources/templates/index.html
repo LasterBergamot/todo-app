@@ -52,7 +52,7 @@
                 $(".authenticated").show();
         });
 
-        $.get("/saveUser", function(data) {
+        $.get("/handleUser", function(data) {
             $("#user_json").html(JSON.stringify(data, null, 4));
         });
 
