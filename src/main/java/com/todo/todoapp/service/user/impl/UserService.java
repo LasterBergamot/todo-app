@@ -3,12 +3,10 @@ package com.todo.todoapp.service.user.impl;
 import com.todo.todoapp.model.user.User;
 import com.todo.todoapp.repository.user.UserRepository;
 import com.todo.todoapp.service.user.IUserService;
+import com.todo.todoapp.util.MongoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -38,37 +36,15 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
 
-    private final MongoTemplate mongoTemplate;
-
     @Autowired
-    public UserService(UserRepository userRepository, MongoTemplate mongoTemplate) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.mongoTemplate = mongoTemplate;
     }
 
     @PostConstruct
     public void initIndexes() {
-        LOGGER.info("Creating index for the 'github_id' field of User.");
-
-        mongoTemplate
-                .indexOps(COLLECTION_NAME_USER)
-                .ensureIndex(
-                        new Index()
-                                .on(KEY_GITHUB_ID, Sort.DEFAULT_DIRECTION)
-                                .named(INDEX_NAME_USER_GITHUB_ID_INDEX)
-                                .unique()
-                );
-
-        LOGGER.info("Creating index for the 'google_id' field of User.");
-
-        mongoTemplate
-                .indexOps(COLLECTION_NAME_USER)
-                .ensureIndex(
-                        new Index()
-                                .on(KEY_GOOGLE_ID, Sort.DEFAULT_DIRECTION)
-                                .named(INDEX_NAME_USER_GOOGLE_ID_INDEX)
-                                .unique()
-                );
+        MongoUtil.createIndex("Creating index for the 'github_id' field of User.", COLLECTION_NAME_USER, KEY_GITHUB_ID, INDEX_NAME_USER_GITHUB_ID_INDEX);
+        MongoUtil.createIndex("Creating index for the 'google_id' field of User.", COLLECTION_NAME_USER, KEY_GOOGLE_ID, INDEX_NAME_USER_GOOGLE_ID_INDEX);
     }
 
     @Override

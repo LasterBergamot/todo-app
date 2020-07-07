@@ -5,14 +5,12 @@ import com.todo.todoapp.model.user.User;
 import com.todo.todoapp.repository.todo.TodoRepository;
 import com.todo.todoapp.repository.user.UserRepository;
 import com.todo.todoapp.service.todo.ITodoService;
+import com.todo.todoapp.util.MongoUtil;
 import com.todo.todoapp.util.TodoUtil;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContext;
@@ -48,27 +46,15 @@ public class TodoService implements ITodoService {
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
 
-    private final MongoTemplate mongoTemplate;
-
     @Autowired
-    public TodoService(TodoRepository todoRepository, UserRepository userRepository, MongoTemplate mongoTemplate) {
+    public TodoService(TodoRepository todoRepository, UserRepository userRepository) {
         this.todoRepository = todoRepository;
         this.userRepository = userRepository;
-        this.mongoTemplate = mongoTemplate;
     }
 
     @PostConstruct
     public void initIndexes() {
-        LOGGER.info("Creating index for the 'name' field of Todo.");
-
-        mongoTemplate
-                .indexOps(COLLECTION_NAME_TODO)
-                .ensureIndex(
-                        new Index()
-                                .on(KEY_NAME, Sort.DEFAULT_DIRECTION)
-                                .named(INDEX_NAME_TODO_NAME_INDEX)
-                                .unique()
-                );
+        MongoUtil.createIndex("Creating index for the 'name' field of Todo.", COLLECTION_NAME_TODO, KEY_NAME, INDEX_NAME_TODO_NAME_INDEX);
     }
 
     /**
