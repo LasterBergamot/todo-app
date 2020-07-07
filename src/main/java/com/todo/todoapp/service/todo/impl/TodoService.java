@@ -29,9 +29,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_JSON;
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_ID;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
+import static com.todo.todoapp.util.Constants.COLLECTION_NAME_TODO;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.INDEX_NAME_TODO_NAME_INDEX;
+import static com.todo.todoapp.util.Constants.KEY_NAME;
 
 @Service
 @Validated
@@ -56,11 +61,11 @@ public class TodoService implements ITodoService {
         LOGGER.info("Creating index for the 'name' field of Todo.");
 
         mongoTemplate
-                .indexOps("Todo")
+                .indexOps(COLLECTION_NAME_TODO)
                 .ensureIndex(
                         new Index()
-                                .on("name", Sort.DEFAULT_DIRECTION)
-                                .named("Todo_name_index")
+                                .on(KEY_NAME, Sort.DEFAULT_DIRECTION)
+                                .named(INDEX_NAME_TODO_NAME_INDEX)
                                 .unique()
                 );
     }
@@ -95,14 +100,14 @@ public class TodoService implements ITodoService {
         if (principal instanceof OidcUser) {
             OidcUser defaultOidcUser = (OidcUser) principal;
 
-            id = Objects.requireNonNull(defaultOidcUser.getAttribute("sub")).toString();
+            id = Objects.requireNonNull(defaultOidcUser.getAttribute(ATTRIBUTE_SUB)).toString();
             user = userRepository.findByGoogleId(id);
 
             // Github
         } else if (principal instanceof DefaultOAuth2User) {
             DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
 
-            id = Objects.requireNonNull(defaultOAuth2User.getAttribute("id")).toString();
+            id = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_ID)).toString();
             user = userRepository.findByGithubId(id);
         }
 

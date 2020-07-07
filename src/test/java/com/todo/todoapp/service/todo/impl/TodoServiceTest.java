@@ -23,9 +23,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_JSON;
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_OR_EMPTY_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;

@@ -18,18 +18,23 @@ import javax.annotation.PostConstruct;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_EMAIL;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_ID;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_LOGIN;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
+import static com.todo.todoapp.util.Constants.COLLECTION_NAME_USER;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_WAS_NULL;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
+import static com.todo.todoapp.util.Constants.INDEX_NAME_USER_GITHUB_ID_INDEX;
+import static com.todo.todoapp.util.Constants.INDEX_NAME_USER_GOOGLE_ID_INDEX;
+import static com.todo.todoapp.util.Constants.KEY_GITHUB_ID;
+import static com.todo.todoapp.util.Constants.KEY_GOOGLE_ID;
+
 @Service
 public class UserService implements IUserService {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(UserService.class);
-
-    private static final String COLLECTION_NAME_USER = "User";
-
-    private static final String ATTRIBUTE_NAME = "name";
-    private static final String ATTRIBUTE_LOGIN = "login";
-    private static final String ATTRIBUTE_SUB = "sub";
-    private static final String ATTRIBUTE_EMAIL = "email";
-    private static final String ATTRIBUTE_ID = "id";
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
 
@@ -49,8 +54,8 @@ public class UserService implements IUserService {
                 .indexOps(COLLECTION_NAME_USER)
                 .ensureIndex(
                         new Index()
-                                .on("github_id", Sort.DEFAULT_DIRECTION)
-                                .named("User_github_id_index")
+                                .on(KEY_GITHUB_ID, Sort.DEFAULT_DIRECTION)
+                                .named(INDEX_NAME_USER_GITHUB_ID_INDEX)
                                 .unique()
                 );
 
@@ -60,8 +65,8 @@ public class UserService implements IUserService {
                 .indexOps(COLLECTION_NAME_USER)
                 .ensureIndex(
                         new Index()
-                                .on("google_id", Sort.DEFAULT_DIRECTION)
-                                .named("User_google_id_index")
+                                .on(KEY_GOOGLE_ID, Sort.DEFAULT_DIRECTION)
+                                .named(INDEX_NAME_USER_GOOGLE_ID_INDEX)
                                 .unique()
                 );
     }
@@ -79,7 +84,7 @@ public class UserService implements IUserService {
         if (Optional.ofNullable(principal).isEmpty()) {
             LOGGER.error("The given principal was null");
 
-            throw new IllegalArgumentException("The given principal was null!");
+            throw new IllegalArgumentException(ERR_MSG_THE_GIVEN_PRINCIPAL_WAS_NULL);
         }
     }
 
@@ -96,7 +101,7 @@ public class UserService implements IUserService {
         }
 
         if (returnedUser == null) {
-            throw new IllegalArgumentException("There's no available service right now to save the user!");
+            throw new IllegalArgumentException(ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE);
         }
 
         return returnedUser;
