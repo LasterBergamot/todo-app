@@ -19,8 +19,10 @@ public class UserRestController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRestController.class);
 
     private static final String GET_MAPPING_USERNAME = "/username";
+    private static final String GET_MAPPING_SAVE_USER = "/saveUser";
 
     private static final String KEY_NAME = "name";
+    private static final String KEY_USER = "user";
 
     private final IUserService userService;
 
@@ -36,12 +38,12 @@ public class UserRestController {
         return Collections.singletonMap(KEY_NAME, userService.getUsername(principal));
     }
 
+    //TODO: should be a POST method
     @PreAuthorize("hasRole('ROLE_USER')")
-    @GetMapping("/saveUser")
+    @GetMapping(GET_MAPPING_SAVE_USER)
     public Map<String, Object> saveUser(@AuthenticationPrincipal OAuth2User principal) {
         LOGGER.info("Saving user!");
-        Map<String, Object> returnedMap = Collections.singletonMap("user", userService.saveUser(principal));
 
-        return returnedMap;
+        return Collections.singletonMap(KEY_USER, userService.saveUser(principal));
     }
 }
