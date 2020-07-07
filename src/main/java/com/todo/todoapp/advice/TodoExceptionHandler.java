@@ -52,6 +52,6 @@ public class TodoExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private void logException(Exception runtimeException) {
-        LOGGER.error("{} occurred - message: {}", runtimeException.getClass().getSimpleName(), runtimeException.getMessage());
+        LOGGER.error("{} occurred - cause: {} - message: {}", runtimeException.getClass().getSimpleName(), runtimeException.getCause(), runtimeException.getMessage());
     }
 }
