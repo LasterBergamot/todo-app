@@ -22,6 +22,9 @@ import java.util.List;
 @RestController
 public class TodoRestController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
+
+    private static final String GET_MAPPING_TODOS_ALL = "/todosAll";
     private static final String GET_MAPPING_TODOS = "/todos";
     private static final String GET_MAPPING_TODOS_WITH_TODO_ID_PATHVAR = "/todos/{todoId}";
 
@@ -31,7 +34,9 @@ public class TodoRestController {
 
     private static final String DELETE_MAPPING_TODOS_WITH_TODO_ID_PATHVAR = "/todos/{todoId}";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TodoRestController.class);
+    private static final String PRE_AUTHORIZE_ROLE_USER = "hasRole('ROLE_USER')";
+
+    private static final String ATTRIBUTE_SPRING_SECURITY_CONTEXT = "SPRING_SECURITY_CONTEXT";
 
     private final ITodoService todoService;
 
@@ -40,20 +45,20 @@ public class TodoRestController {
         this.todoService = todoService;
     }
 
-    @PreAuthorize("hasRole('ROLE_USER')")
-    @GetMapping("/todosAll")
+    @PreAuthorize(PRE_AUTHORIZE_ROLE_USER)
+    @GetMapping(GET_MAPPING_TODOS_ALL)
     public ResponseEntity<List<Todo>> getAllTodos() {
         LOGGER.info("Getting all Todos from the database!");
 
         return todoService.getTodos();
     }
 
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize(PRE_AUTHORIZE_ROLE_USER)
     @GetMapping(GET_MAPPING_TODOS)
     public ResponseEntity<List<Todo>> getTodos(HttpSession session) {
         LOGGER.info("Getting Todos for the user from the database!");
 
-        return todoService.getTodos((SecurityContext) session.getAttribute("SPRING_SECURITY_CONTEXT"));
+        return todoService.getTodos((SecurityContext) session.getAttribute(ATTRIBUTE_SPRING_SECURITY_CONTEXT));
     }
 
     @GetMapping(GET_MAPPING_TODOS_WITH_TODO_ID_PATHVAR)

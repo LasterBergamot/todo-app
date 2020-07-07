@@ -11,7 +11,7 @@ public class HomeController {
     private static Logger LOGGER = LoggerFactory.getLogger(HomeController.class);
 
     private static final String GET_MAPPING_ROOT = "/";
-    
+
     private static final String PAGE_INDEX = "index";
 
     @GetMapping(GET_MAPPING_ROOT)
