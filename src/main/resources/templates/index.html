@@ -31,6 +31,9 @@
                 <div id="user_json"></div>
             </div>
             <div>
+                <button onClick="handleUser()" class="btn btn-primary">Get User data</button>
+            </div>
+            <div>
                 <button onClick="logout()" class="btn btn-primary">Logout</button>
             </div>
         </div>
@@ -52,9 +55,11 @@
                 $(".authenticated").show();
         });
 
-        $.get("/handleUser", function(data) {
-            $("#user_json").html(JSON.stringify(data, null, 4));
-        });
+        var handleUser = function() {
+            $.get("/handleUser", function(data) {
+                $("#user_json").html(JSON.stringify(data, null, 4));
+            });
+        }
 
         var logout = function() {
             $.post("/logout", function() {
