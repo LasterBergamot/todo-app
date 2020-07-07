@@ -2,14 +2,13 @@ package com.todo.todoapp.service.todo.impl;
 
 import com.todo.todoapp.model.todo.Priority;
 import com.todo.todoapp.model.todo.Todo;
-import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.todo.TodoRepository;
 import com.todo.todoapp.repository.user.UserRepository;
+import com.todo.todoapp.util.MongoUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -24,9 +23,30 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_JSON;
-import static com.todo.todoapp.util.todo.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.DP_DELETE_TODO_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_GET_TODOS_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_GET_TODO_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_UPDATE_TODO_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.EMPTY_STRING;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.KEY_EMPTY_TODO;
+import static com.todo.todoapp.util.Constants.KEY_NON_EXISTING_TODO;
+import static com.todo.todoapp.util.Constants.KEY_TODO_FOR_UPDATING;
+import static com.todo.todoapp.util.Constants.KEY_TODO_WITHOUT_NAME;
+import static com.todo.todoapp.util.Constants.KEY_TODO_WITHOUT_PRIORITY;
+import static com.todo.todoapp.util.Constants.KEY_TODO_WITH_EMPTY_NAME;
+import static com.todo.todoapp.util.Constants.TODO_ID_FOUR;
+import static com.todo.todoapp.util.Constants.TODO_ID_ONE;
+import static com.todo.todoapp.util.Constants.TODO_ID_THREE;
+import static com.todo.todoapp.util.Constants.TODO_ID_TWO;
+import static com.todo.todoapp.util.Constants.TODO_NAME_ONE;
+import static com.todo.todoapp.util.Constants.TODO_NAME_THREE;
+import static com.todo.todoapp.util.Constants.TODO_NAME_TWO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,71 +57,51 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class TodoServiceTest {
-
-    private static final String TODO_ID_ONE = "1";
-    private static final String TODO_NAME_ONE = "Todo #1";
-
-    private static final String TODO_ID_TWO = "2";
-    private static final String TODO_NAME_TWO = "Todo #2";
-
-    private static final String TODO_ID_THREE = "3";
-    private static final String TODO_NAME_THREE = "Todo #3";
-
-    private static final String TODO_ID_FOUR = "4";
-
-    private static final String EMPTY_STRING = "";
+class TodoServiceTest {
 
     private static final List<Todo> TODO_LIST = List.of(
-            new TodoBuilder()
+            new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(TODO_NAME_ONE)
                     .withPriority(Priority.SMALL)
                     .build(),
-            new TodoBuilder()
+            new Todo.Builder()
                     .withId(TODO_ID_TWO)
                     .withName(TODO_NAME_TWO)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.MEDIUM).build(),
-            new TodoBuilder()
+            new Todo.Builder()
                     .withId(TODO_ID_THREE)
                     .withName(TODO_NAME_THREE)
                     .withPriority(Priority.BIG)
                     .build()
     );
 
-    private static final String KEY_EMPTY_TODO = "EmptyTodo";
-    private static final String KEY_TODO_WITHOUT_NAME = "TodoWithoutName";
-    private static final String KEY_TODO_WITH_EMPTY_NAME = "TodoWithEmptyName";
-    private static final String KEY_TODO_WITHOUT_PRIORITY = "TodoWithoutPriority";
-    private static final String KEY_NON_EXISTING_TODO = "NonExistingTodo";
-    private static final String KEY_TODO_FOR_UPDATING = "TodoForUpdating";
-
     private static final Map<String, Todo> TODO_MAP = Map.of(
-            KEY_EMPTY_TODO, new TodoBuilder().build(),
-            KEY_TODO_WITHOUT_NAME, new TodoBuilder()
+            KEY_EMPTY_TODO, new Todo.Builder().build(),
+            KEY_TODO_WITHOUT_NAME, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.SMALL)
                     .build(),
-            KEY_TODO_WITH_EMPTY_NAME, new TodoBuilder()
+            KEY_TODO_WITH_EMPTY_NAME, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(EMPTY_STRING)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.MEDIUM)
                     .build(),
-            KEY_TODO_WITHOUT_PRIORITY, new TodoBuilder()
+            KEY_TODO_WITHOUT_PRIORITY, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(TODO_NAME_ONE)
                     .withDeadline(LocalDate.now())
                     .build(),
-            KEY_NON_EXISTING_TODO, new TodoBuilder()
+            KEY_NON_EXISTING_TODO, new Todo.Builder()
                     .withId(TODO_ID_FOUR)
                     .withName(EMPTY_STRING)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.BIG)
                     .build(),
-            KEY_TODO_FOR_UPDATING, new TodoBuilder()
+            KEY_TODO_FOR_UPDATING, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(TODO_NAME_TWO)
                     .withDeadline(LocalDate.now())
@@ -109,19 +109,11 @@ public class TodoServiceTest {
                     .build()
     );
 
-    private static final String DP_GET_TODOS_DATA_PROVIDER = "getTodosDataProvider";
-    private static final String DP_GET_TODO_DATA_PROVIDER = "getTodoDataProvider";
-    private static final String DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER = "getTodoWithMockingDataProvider";
-    private static final String DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "saveTodoConstraintViolationExceptionDataProvider";
-    private static final String DP_UPDATE_TODO_DATA_PROVIDER = "updateTodoDataProvider";
-    private static final String DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "updateTodoConstraintViolationExceptionDataProvider";
-    private static final String DP_DELETE_TODO_DATA_PROVIDER = "deleteTodoDataProvider";
-
     private TodoService todoService;
 
     private TodoRepository todoRepository;
     private UserRepository userRepository;
-    private MongoTemplate mongoTemplate;
+    private MongoUtil mongoUtil;
 
     private Validator validator;
 
@@ -129,7 +121,7 @@ public class TodoServiceTest {
     public void setUp() {
         todoRepository = mock(TodoRepository.class);
         userRepository = mock(UserRepository.class);
-        mongoTemplate = mock(MongoTemplate.class);
+        mongoUtil = mock(MongoUtil.class);
     }
 
     /*
@@ -145,7 +137,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_GET_TODOS_DATA_PROVIDER)
-    public void getTodosTest(List<Todo> todoList) {
+    void getTodosTest(List<Todo> todoList) {
         // GIVEN
 
         // WHEN
@@ -173,7 +165,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_GET_TODO_DATA_PROVIDER)
-    public void getTodoTest(String todoId) {
+    void getTodoTest(String todoId) {
         // GIVEN
 
         // WHEN
@@ -195,7 +187,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER)
-    public void getTodoWithMockingTest(String todoId, Optional<Todo> optionalStoredTodo, ResponseEntity<Object> expectedResponseEntity) {
+    void getTodoWithMockingTest(String todoId, Optional<Todo> optionalStoredTodo, ResponseEntity<Object> expectedResponseEntity) {
         // GIVEN
 
         // WHEN
@@ -224,7 +216,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER)
-    public void saveTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
+    void saveTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
         // GIVEN
         createValidator();
 
@@ -240,7 +232,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_saveTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
+    void test_saveTodoShouldReturnAResponseEntityWithBadRequestAndWithTheAppropriateErrorMessage_WhenTheGivenTodoFromJSONIsNull() {
         // GIVEN
         Todo nullTodoFromJSON = null;
 
@@ -255,7 +247,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_saveTodoShouldReturnAResponseEntityWithCreated_WhenTheGivenTodoFromJSONIsValid() {
+    void test_saveTodoShouldReturnAResponseEntityWithCreated_WhenTheGivenTodoFromJSONIsValid() {
         // GIVEN
         Todo todoFromJSON = TODO_LIST.get(0);
 
@@ -285,7 +277,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_UPDATE_TODO_DATA_PROVIDER)
-    public void updateTodoTest(String todoId, Todo todoFromJSON, ResponseEntity<Object> expectedResponseEntity) {
+    void updateTodoTest(String todoId, Todo todoFromJSON, ResponseEntity<Object> expectedResponseEntity) {
         // GIVEN
 
         // WHEN
@@ -309,7 +301,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER)
-    public void updateTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
+    void updateTodoConstraintViolationExceptionTest(Todo todoFromJSON) {
         // GIVEN
         createValidator();
 
@@ -326,7 +318,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
+    void test_updateTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
         String nonExistingTodoId = TODO_ID_FOUR;
         Todo todoFromJSON = TODO_MAP.get(KEY_NON_EXISTING_TODO);
@@ -345,7 +337,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_updateTodoShouldReturnAResponseEntityWithCreated_WhenTheDesiredTodoCanBeUpdated() {
+    void test_updateTodoShouldReturnAResponseEntityWithCreated_WhenTheDesiredTodoCanBeUpdated() {
         // GIVEN
         String todoId = TODO_ID_ONE;
         Todo todoFromJSON = TODO_MAP.get(KEY_TODO_FOR_UPDATING);
@@ -378,7 +370,7 @@ public class TodoServiceTest {
 
     @ParameterizedTest
     @MethodSource(DP_DELETE_TODO_DATA_PROVIDER)
-    public void deleteTodoTest(String todoId) {
+    void deleteTodoTest(String todoId) {
         // GIVEN
 
         // WHEN
@@ -393,7 +385,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
+    void test_deleteTodoShouldReturnAResponseEntityWithNotFoundAndWithTheAppropriateErrorMessage_WhenNoTodoExistsWithTheGivenId() {
         // GIVEN
         String nonExistingTodoId = TODO_ID_FOUR;
 
@@ -411,7 +403,7 @@ public class TodoServiceTest {
     }
 
     @Test
-    public void test_deleteTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoHasBeenDeleted() {
+    void test_deleteTodoShouldReturnAResponseEntityWithOk_WhenTheDesiredTodoHasBeenDeleted() {
         // GIVEN
         Todo storedTodo = TODO_LIST.get(0);
         String todoId = storedTodo.getId();
@@ -436,6 +428,6 @@ public class TodoServiceTest {
     }
 
     private TodoService getTodoService() {
-        return new TodoService(todoRepository, userRepository, mongoTemplate);
+        return new TodoService(todoRepository, userRepository, mongoUtil);
     }
 }

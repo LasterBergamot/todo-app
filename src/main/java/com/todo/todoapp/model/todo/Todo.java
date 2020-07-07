@@ -13,25 +13,30 @@ import java.util.Objects;
 @Document(collection = "Todo")
 public class Todo {
 
+    private static final String FIELD_USER_ID = "user_id";
+    private static final String FIELD_NAME = "name";
+    private static final String FIELD_DEADLINE = "deadline";
+    private static final String FIELD_PRIORITY = "priority";
+
     @Id
     private final String id;
 
     @NotNull
     @NotEmpty
-    @Field("user_id")
+    @Field(FIELD_USER_ID)
     private final String userId;
 
     @NotEmpty
     @NotNull
-    @Field("name")
+    @Field(FIELD_NAME)
     @Valid
     private String name;
 
-    @Field("deadline")
+    @Field(FIELD_DEADLINE)
     private LocalDate deadline;
 
     @NotNull
-    @Field("priority")
+    @Field(FIELD_PRIORITY)
     @Valid
     private Priority priority;
 
@@ -101,5 +106,47 @@ public class Todo {
                 ", deadline=" + deadline +
                 ", priority=" + priority +
                 '}';
+    }
+
+    public static class Builder {
+        private String id;
+        private String userId;
+        private String name;
+        private LocalDate deadline;
+        private Priority priority;
+
+        public Todo.Builder withId(String id) {
+            this.id = id;
+
+            return this;
+        }
+
+        public Todo.Builder withUserId(String userId) {
+            this.userId = userId;
+
+            return this;
+        }
+
+        public Todo.Builder withName(String name) {
+            this.name = name;
+
+            return this;
+        }
+
+        public Todo.Builder withDeadline(LocalDate deadline) {
+            this.deadline = deadline;
+
+            return this;
+        }
+
+        public Todo.Builder withPriority(Priority priority) {
+            this.priority = priority;
+
+            return this;
+        }
+
+        public Todo build() {
+            return new Todo(id, userId, name, deadline, priority);
+        }
     }
 }

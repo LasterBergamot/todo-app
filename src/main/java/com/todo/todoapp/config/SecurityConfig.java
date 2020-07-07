@@ -23,7 +23,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         ).csrf(
          csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         ).exceptionHandling(
-                exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.BAD_REQUEST))
+                exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.BAD_REQUEST)) //TODO: use somewhere else to handle forbidden pages??
         ).oauth2Login();
         //formatter:on
     }
