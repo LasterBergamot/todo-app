@@ -6,17 +6,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MongoUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoUtil.class);
 
+    private final MongoTemplate mongoTemplate;
+
     @Autowired
-    private static MongoTemplate mongoTemplate;
+    public MongoUtil(MongoTemplate mongoTemplate) {
+        this.mongoTemplate = mongoTemplate;
+    }
 
-    private MongoUtil() {}
-
-    public static void createIndex(String loggerMsg, String collectionName, String indexKey, String indexName) {
+    public void createIndex(String loggerMsg, String collectionName, String indexKey, String indexName) {
         LOGGER.info(loggerMsg);
 
         mongoTemplate

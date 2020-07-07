@@ -45,16 +45,18 @@ public class TodoService implements ITodoService {
 
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
+    private final MongoUtil mongoUtil;
 
     @Autowired
-    public TodoService(TodoRepository todoRepository, UserRepository userRepository) {
+    public TodoService(TodoRepository todoRepository, UserRepository userRepository, MongoUtil mongoUtil) {
         this.todoRepository = todoRepository;
         this.userRepository = userRepository;
+        this.mongoUtil = mongoUtil;
     }
 
     @PostConstruct
     public void initIndexes() {
-        MongoUtil.createIndex("Creating index for the 'name' field of Todo.", COLLECTION_NAME_TODO, KEY_NAME, INDEX_NAME_TODO_NAME_INDEX);
+        mongoUtil.createIndex("Creating index for the 'name' field of Todo.", COLLECTION_NAME_TODO, KEY_NAME, INDEX_NAME_TODO_NAME_INDEX);
     }
 
     /**

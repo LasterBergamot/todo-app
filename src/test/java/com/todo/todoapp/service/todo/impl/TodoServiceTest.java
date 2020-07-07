@@ -4,11 +4,11 @@ import com.todo.todoapp.model.todo.Priority;
 import com.todo.todoapp.model.todo.Todo;
 import com.todo.todoapp.repository.todo.TodoRepository;
 import com.todo.todoapp.repository.user.UserRepository;
+import com.todo.todoapp.util.MongoUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -113,7 +113,7 @@ class TodoServiceTest {
 
     private TodoRepository todoRepository;
     private UserRepository userRepository;
-    private MongoTemplate mongoTemplate;
+    private MongoUtil mongoUtil;
 
     private Validator validator;
 
@@ -121,7 +121,7 @@ class TodoServiceTest {
     public void setUp() {
         todoRepository = mock(TodoRepository.class);
         userRepository = mock(UserRepository.class);
-        mongoTemplate = mock(MongoTemplate.class);
+        mongoUtil = mock(MongoUtil.class);
     }
 
     /*
@@ -428,6 +428,6 @@ class TodoServiceTest {
     }
 
     private TodoService getTodoService() {
-        return new TodoService(todoRepository, userRepository, mongoTemplate);
+        return new TodoService(todoRepository, userRepository, mongoUtil);
     }
 }
