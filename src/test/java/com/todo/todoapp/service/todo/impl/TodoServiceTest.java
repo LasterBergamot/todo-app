@@ -2,7 +2,6 @@ package com.todo.todoapp.service.todo.impl;
 
 import com.todo.todoapp.model.todo.Priority;
 import com.todo.todoapp.model.todo.Todo;
-import com.todo.todoapp.model.todo.builder.TodoBuilder;
 import com.todo.todoapp.repository.todo.TodoRepository;
 import com.todo.todoapp.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,17 +52,17 @@ public class TodoServiceTest {
     private static final String EMPTY_STRING = "";
 
     private static final List<Todo> TODO_LIST = List.of(
-            new TodoBuilder()
+            new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(TODO_NAME_ONE)
                     .withPriority(Priority.SMALL)
                     .build(),
-            new TodoBuilder()
+            new Todo.Builder()
                     .withId(TODO_ID_TWO)
                     .withName(TODO_NAME_TWO)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.MEDIUM).build(),
-            new TodoBuilder()
+            new Todo.Builder()
                     .withId(TODO_ID_THREE)
                     .withName(TODO_NAME_THREE)
                     .withPriority(Priority.BIG)
@@ -78,30 +77,30 @@ public class TodoServiceTest {
     private static final String KEY_TODO_FOR_UPDATING = "TodoForUpdating";
 
     private static final Map<String, Todo> TODO_MAP = Map.of(
-            KEY_EMPTY_TODO, new TodoBuilder().build(),
-            KEY_TODO_WITHOUT_NAME, new TodoBuilder()
+            KEY_EMPTY_TODO, new Todo.Builder().build(),
+            KEY_TODO_WITHOUT_NAME, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.SMALL)
                     .build(),
-            KEY_TODO_WITH_EMPTY_NAME, new TodoBuilder()
+            KEY_TODO_WITH_EMPTY_NAME, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(EMPTY_STRING)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.MEDIUM)
                     .build(),
-            KEY_TODO_WITHOUT_PRIORITY, new TodoBuilder()
+            KEY_TODO_WITHOUT_PRIORITY, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(TODO_NAME_ONE)
                     .withDeadline(LocalDate.now())
                     .build(),
-            KEY_NON_EXISTING_TODO, new TodoBuilder()
+            KEY_NON_EXISTING_TODO, new Todo.Builder()
                     .withId(TODO_ID_FOUR)
                     .withName(EMPTY_STRING)
                     .withDeadline(LocalDate.now())
                     .withPriority(Priority.BIG)
                     .build(),
-            KEY_TODO_FOR_UPDATING, new TodoBuilder()
+            KEY_TODO_FOR_UPDATING, new Todo.Builder()
                     .withId(TODO_ID_ONE)
                     .withName(TODO_NAME_TWO)
                     .withDeadline(LocalDate.now())
