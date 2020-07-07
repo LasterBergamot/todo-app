@@ -82,17 +82,17 @@ public class TodoService implements ITodoService {
      */
     @Override
     public ResponseEntity<Object> getTodos(SecurityContext springSecurityContext) {
-        LOGGER.info("Getting Todos for the given user!");
-
         if (springSecurityContext == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN);
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN);
         }
 
         User user = getUserFromDatabase(springSecurityContext);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE);
+            return getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE);
         }
+
+        LOGGER.info("Getting Todos for the given user!");
 
         return ResponseEntity.ok(todoRepository.findByUserId(user.getId()));
     }
@@ -191,7 +191,6 @@ public class TodoService implements ITodoService {
         ResponseEntity<Object> responseEntity;
 
         if (optionalTodo.isPresent()) {
-            LOGGER.info("Updating Todo!");
             Todo updatedTodo = TodoUtil.updateTodo(optionalTodo.get(), todoFromJSON);
 
             responseEntity = ResponseEntity.status(HttpStatus.OK).body(todoRepository.save(updatedTodo));

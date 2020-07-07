@@ -13,11 +13,12 @@ public class TodoUtil {
     public static Todo updateTodo(Todo todoFromRepo, Todo todoFromJSON) {
         LOGGER.info("Updating Todo!");
         LOGGER.info("Original: {}", todoFromRepo);
-        LOGGER.info("Updated: {}", todoFromJSON);
 
         todoFromRepo.setName(todoFromJSON.getName());
         todoFromRepo.setDeadline(todoFromJSON.getDeadline());
         todoFromRepo.setPriority(todoFromJSON.getPriority());
+
+        LOGGER.info("Updated: {}", todoFromRepo);
 
         return todoFromRepo;
     }
