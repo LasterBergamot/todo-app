@@ -16,6 +16,12 @@ public class Constants {
     public static final String KEY_NAME = "name";
     public static final String KEY_GITHUB_ID = "github_id";
     public static final String KEY_GOOGLE_ID = "google_id";
+    public static final String KEY_EMPTY_TODO = "EmptyTodo";
+    public static final String KEY_TODO_WITHOUT_NAME = "TodoWithoutName";
+    public static final String KEY_TODO_WITH_EMPTY_NAME = "TodoWithEmptyName";
+    public static final String KEY_TODO_WITHOUT_PRIORITY = "TodoWithoutPriority";
+    public static final String KEY_NON_EXISTING_TODO = "NonExistingTodo";
+    public static final String KEY_TODO_FOR_UPDATING = "TodoForUpdating";
 
     public static final String INDEX_NAME_TODO_NAME_INDEX = "Todo_name_index";
     public static final String INDEX_NAME_USER_GITHUB_ID_INDEX = "User_github_id_index";
@@ -26,4 +32,23 @@ public class Constants {
     public static final String ATTRIBUTE_NAME = "name";
     public static final String ATTRIBUTE_LOGIN = "login";
     public static final String ATTRIBUTE_EMAIL = "email";
+
+    public static final String TODO_ID_ONE = "1";
+    public static final String TODO_ID_TWO = "2";
+    public static final String TODO_ID_THREE = "3";
+    public static final String TODO_ID_FOUR = "4";
+
+    public static final String TODO_NAME_ONE = "Todo #1";
+    public static final String TODO_NAME_TWO = "Todo #2";
+    public static final String TODO_NAME_THREE = "Todo #3";
+
+    public static final String EMPTY_STRING = "";
+
+    public static final String DP_GET_TODOS_DATA_PROVIDER = "getTodosDataProvider";
+    public static final String DP_GET_TODO_DATA_PROVIDER = "getTodoDataProvider";
+    public static final String DP_GET_TODO_WITH_MOCKING_DATA_PROVIDER = "getTodoWithMockingDataProvider";
+    public static final String DP_SAVE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "saveTodoConstraintViolationExceptionDataProvider";
+    public static final String DP_UPDATE_TODO_DATA_PROVIDER = "updateTodoDataProvider";
+    public static final String DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "updateTodoConstraintViolationExceptionDataProvider";
+    public static final String DP_DELETE_TODO_DATA_PROVIDER = "deleteTodoDataProvider";
 }
