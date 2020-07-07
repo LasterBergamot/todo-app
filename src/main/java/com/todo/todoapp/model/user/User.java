@@ -13,17 +13,21 @@ import java.util.Objects;
 @Document(collection = "User")
 public class User {
 
+    private static final String FIELD_EMAIL = "email";
+    private static final String FIELD_GITHUB_ID = "github_id";
+    private static final String FIELD_GOOGLE_ID = "google_id";
+
     @Id
     private String id;
 
     @Email
-    @Field(name = "email")
+    @Field(name = FIELD_EMAIL)
     private String email;
 
-    @Field(name = "github_id")
+    @Field(name = FIELD_GITHUB_ID)
     private String githubId;
 
-    @Field(name = "google_id")
+    @Field(name = FIELD_GOOGLE_ID)
     private String googleId;
 
     public User(String id, @Email String email, @NotNull @NotEmpty @Valid String githubId, @NotNull @NotEmpty @Valid String googleId) {
