@@ -53,6 +53,7 @@ public class UserService implements IUserService {
     public String getUsername(OAuth2User principal) {
         checkPrincipal(principal);
 
+        //TODO: use something else rather than Objects.requireNonNull() ??
         return principal instanceof OidcUser
                 ? Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_NAME)).toString()
                 : Objects.requireNonNull(principal.getAttribute(ATTRIBUTE_LOGIN)).toString();
