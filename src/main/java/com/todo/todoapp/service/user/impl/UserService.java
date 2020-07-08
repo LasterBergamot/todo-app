@@ -71,10 +71,14 @@ public class UserService implements IUserService {
     }
 
     private void checkNameAttributes(OAuth2User principal, Object attributeName, Object attributeLogin) {
-        if (principal instanceof OidcUser && attributeName == null) {
-            throwIllegalArgumentException(ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL);
-        } else if (principal instanceof DefaultOAuth2User && attributeLogin == null) {
-            throwIllegalArgumentException(ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL);
+        if (principal instanceof OidcUser ) {
+            if (attributeName == null) {
+                throwIllegalArgumentException(ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL);
+            }
+        } else if (principal instanceof DefaultOAuth2User) {
+            if (attributeLogin == null) {
+                throwIllegalArgumentException(ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL);
+            }
         }
     }
 
