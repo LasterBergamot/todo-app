@@ -11,6 +11,14 @@ public class Constants {
     public static final String ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE = "The given user could not be saved to any available service!";
     public static final String ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN = "Currently no user is logged in!";
     public static final String ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE = "Currently the given user does not exist in the database!";
+    public static final String ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL = "The principal's name attribute is null!";
+    public static final String ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL = "The principal's login attribute is null!";
+    public static final String ERR_MSG_THE_GIVEN_PROVIDER_IS_NOT_SUPPORTED = "The given provider is not supported!";
+    public static final String ERR_MSG_THE_PRINCIPAL_S_SUB_ATTRIBUTE_IS_NULL = "The principal's sub attribute is null!";
+    public static final String ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL = "The principal's email attribute is null!";
+    public static final String ERR_MSG_THE_PRINCIPAL_S_ID_ATTRIBUTE_IS_NULL = "The principal's id attribute is null!";
+
+    public static final String NAME_ANDREW = "Andrew";
 
     public static final String COLLECTION_NAME_TODO = "Todo";
     public static final String COLLECTION_NAME_USER = "User";
