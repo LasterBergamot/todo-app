@@ -4,11 +4,9 @@ import com.todo.todoapp.model.user.User;
 import com.todo.todoapp.repository.user.UserRepository;
 import com.todo.todoapp.util.MongoUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -25,7 +23,6 @@ import static com.todo.todoapp.util.Constants.DP_HANDLE_USER_ID_ATTRIBUTE_IS_NUL
 import static com.todo.todoapp.util.Constants.DP_HANDLE_USER_SHOULD_RETURN_A_NEW_USER_DATA_PROVIDER;
 import static com.todo.todoapp.util.Constants.EMAIL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
-import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_ID_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL;
@@ -225,31 +222,6 @@ class UserServiceTest {
         );
 
         assertEquals(errorMessage, exception.getMessage());
-
-        // VERIFY
-        verify(principal, times(2)).getAttribute(anyString());
-        verifyNoInteractions(userRepository, mongoUtil);
-    }
-
-    @Disabled
-    @Test
-    void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheGivenPrincipalIsNotFromASupportedProvider() {
-        // GIVEN
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
-
-        // WHEN
-        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(GITHUB_ID);
-        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
-
-        userService = createUserService();
-
-        // THEN
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.handleUser((OAuth2User) principal)
-        );
-
-        assertEquals(ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE, exception.getMessage());
 
         // VERIFY
         verify(principal, times(2)).getAttribute(anyString());

@@ -124,15 +124,9 @@ public class UserService implements IUserService {
     }
 
     private User handleLogin(OAuth2User principal) {
-        User returnedUser = null;
-
-        if (principal instanceof OidcUser) {
-            returnedUser = handleGoogleLogin((OidcUser) principal);
-        } else if (principal instanceof DefaultOAuth2User) {
-            returnedUser = handleGithubLogin((DefaultOAuth2User) principal);
-        }
-
-        return returnedUser;
+        return principal instanceof OidcUser
+                ? handleGoogleLogin((OidcUser) principal)
+                : handleGithubLogin((DefaultOAuth2User) principal);
     }
 
     private User handleGoogleLogin(OidcUser oidcUser) {
