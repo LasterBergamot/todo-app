@@ -4,12 +4,16 @@ import com.todo.todoapp.repository.user.UserRepository;
 import com.todo.todoapp.util.MongoUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_LOGIN;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
+import static com.todo.todoapp.util.Constants.DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NOT_NULL_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NULL_DATA_PROVIDER;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL;
@@ -61,13 +65,20 @@ class UserServiceTest {
         verifyNoInteractions(mongoUtil);
     }
 
-    @Test
-    void test_getUsernameShouldThrowAnIllegalArgumentException_WhenTheNameAttributeIsNull_AndTheProviderIsGoogle() {
+    private static Object[][] getUsernameNameAttributeIsNullDataProvider() {
+        return new Object[][] {
+                {mock(OidcUser.class), ATTRIBUTE_NAME, ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL},
+                {mock(DefaultOAuth2User.class), ATTRIBUTE_LOGIN, ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL}
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource(DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NULL_DATA_PROVIDER)
+    void test_getUserNameShouldThrowIllegalArgumentException_WhenTheNameAttributeIsNull(OAuth2User principal, String nameAttribute, String errorMessage) {
         // GIVEN
-        OidcUser principal = mock(OidcUser.class);
 
         // WHEN
-        when(principal.getAttribute(ATTRIBUTE_NAME)).thenReturn(null);
+        when(principal.getAttribute(nameAttribute)).thenReturn(null);
 
         userService = createUserService();
 
@@ -77,7 +88,7 @@ class UserServiceTest {
                 () -> userService.getUsername(principal)
         );
 
-        assertEquals(ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL, exception.getMessage());
+        assertEquals(errorMessage, exception.getMessage());
 
         // VERIFY
         verify(principal, times(2)).getAttribute(anyString());
@@ -85,56 +96,20 @@ class UserServiceTest {
         verifyNoInteractions(mongoUtil);
     }
 
-    @Test
-    void test_getUsernameShouldThrowAnIllegalArgumentException_WhenTheLoginAttributeIsNull_AndTheProviderIsGithub() {
-        // GIVEN
-        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
-
-        // WHEN
-        when(principal.getAttribute(ATTRIBUTE_LOGIN)).thenReturn(null);
-
-        userService = createUserService();
-
-        // THEN
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.getUsername(principal)
-        );
-
-        assertEquals(ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL, exception.getMessage());
-
-        // VERIFY
-        verify(principal, times(2)).getAttribute(anyString());
-        verifyNoInteractions(userRepository);
-        verifyNoInteractions(mongoUtil);
+    private static Object[][] getUsernameNameAttributeIsNotNullDataProvider() {
+        return new Object[][] {
+                {mock(OidcUser.class), ATTRIBUTE_NAME},
+                {mock(DefaultOAuth2User.class), ATTRIBUTE_LOGIN}
+        };
     }
 
-    @Test
-    void test_getUsernameShouldReturnTheUsernameFromTheNameAttribute_WhenTheProviderIsGoogle() {
+    @ParameterizedTest
+    @MethodSource(DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NOT_NULL_DATA_PROVIDER)
+    void test_getUsernameShouldReturnAName_WhenTheNameAttributeIsNotNull(OAuth2User principal, String nameAttribute) {
         // GIVEN
-        OidcUser principal = mock(OidcUser.class);
 
         // WHEN
-        when(principal.getAttribute(ATTRIBUTE_NAME)).thenReturn(NAME_ANDREW);
-
-        userService = createUserService();
-
-        // THEN
-        assertEquals(NAME_ANDREW, userService.getUsername(principal));
-
-        // VERIFY
-        verify(principal, times(2)).getAttribute(anyString());
-        verifyNoInteractions(userRepository);
-        verifyNoInteractions(mongoUtil);
-    }
-
-    @Test
-    void test_getUsernameShouldReturnTheUsernameFromTheLoginAttribute_WhenTheProviderIsGithub() {
-        // GIVEN
-        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
-
-        // WHEN
-        when(principal.getAttribute(ATTRIBUTE_LOGIN)).thenReturn(NAME_ANDREW);
+        when(principal.getAttribute(nameAttribute)).thenReturn(NAME_ANDREW);
 
         userService = createUserService();
 

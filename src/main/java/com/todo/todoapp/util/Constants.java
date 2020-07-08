@@ -61,4 +61,6 @@ public class Constants {
     public static final String DP_UPDATE_TODO_DATA_PROVIDER = "updateTodoDataProvider";
     public static final String DP_UPDATE_TODO_CONSTRAINT_VIOLATION_EXCEPTION_DATA_PROVIDER = "updateTodoConstraintViolationExceptionDataProvider";
     public static final String DP_DELETE_TODO_DATA_PROVIDER = "deleteTodoDataProvider";
+    public static final String DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NULL_DATA_PROVIDER = "getUsernameNameAttributeIsNullDataProvider";
+    public static final String DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NOT_NULL_DATA_PROVIDER = "getUsernameNameAttributeIsNotNullDataProvider";
 }
