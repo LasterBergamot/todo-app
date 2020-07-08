@@ -63,4 +63,8 @@ public class Constants {
     public static final String DP_DELETE_TODO_DATA_PROVIDER = "deleteTodoDataProvider";
     public static final String DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NULL_DATA_PROVIDER = "getUsernameNameAttributeIsNullDataProvider";
     public static final String DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NOT_NULL_DATA_PROVIDER = "getUsernameNameAttributeIsNotNullDataProvider";
+
+    public static final String GOOGLE_ID = "156246724635752711248";
+    public static final String GITHUB_ID = "56322326";
+    public static final String EMAIL = "asd123@asd.com";
 }
