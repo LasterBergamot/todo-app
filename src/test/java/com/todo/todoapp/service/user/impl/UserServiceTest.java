@@ -20,6 +20,9 @@ import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
 import static com.todo.todoapp.util.Constants.DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NOT_NULL_DATA_PROVIDER;
 import static com.todo.todoapp.util.Constants.DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NULL_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_HANDLE_USER_EMAIL_ATTRIBUTE_IS_NULL_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_HANDLE_USER_ID_ATTRIBUTE_IS_NULL_DATA_PROVIDER;
+import static com.todo.todoapp.util.Constants.DP_HANDLE_USER_SHOULD_RETURN_A_NEW_USER_DATA_PROVIDER;
 import static com.todo.todoapp.util.Constants.EMAIL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
@@ -175,7 +178,7 @@ class UserServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("handleUserIdAttributeIsNullDataProvider")
+    @MethodSource(DP_HANDLE_USER_ID_ATTRIBUTE_IS_NULL_DATA_PROVIDER)
     void test_handleUserShouldThrowIllegalArgumentException_WhenTheIdAttributeIsNull(OAuth2User principal, String idAttribute, String errorMessage) {
         // GIVEN
 
@@ -205,7 +208,7 @@ class UserServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("handleUserEmailAttributeIsNullDataProvider")
+    @MethodSource(DP_HANDLE_USER_EMAIL_ATTRIBUTE_IS_NULL_DATA_PROVIDER)
     void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheEmailAttributeIsNull(OAuth2User principal, String idAttribute, String id, String errorMessage) {
         // GIVEN
 
@@ -263,7 +266,7 @@ class UserServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("handleUserShouldReturnANewUserDataProvider")
+    @MethodSource(DP_HANDLE_USER_SHOULD_RETURN_A_NEW_USER_DATA_PROVIDER)
     void test_handleUserShouldReturnANewUser(OAuth2User principal, User user, User userReturnedByEmail, String idAttribute, String id) {
         // GIVEN
 
