@@ -21,7 +21,6 @@ import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
 import static com.todo.todoapp.util.Constants.COLLECTION_NAME_USER;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
-import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_ID_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL;
@@ -84,13 +83,7 @@ public class UserService implements IUserService {
         checkPrincipal(principal);
         checkPrincipalAttributes(principal);
 
-        User returnedUser = handleLogin(principal);
-
-        if (returnedUser == null) {
-            throwIllegalArgumentException(ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE);
-        }
-
-        return returnedUser;
+        return handleLogin(principal);
     }
 
     private void checkPrincipalAttributes(OAuth2User principal) {
