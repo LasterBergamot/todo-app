@@ -1,4 +1,4 @@
-package com.todo.todoapp.interceptor;
+package com.todo.todoapp.interceptor.todo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

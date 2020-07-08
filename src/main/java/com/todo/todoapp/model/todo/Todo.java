@@ -13,25 +13,36 @@ import java.util.Objects;
 @Document(collection = "Todo")
 public class Todo {
 
+    private static final String FIELD_USER_ID = "user_id";
+    private static final String FIELD_NAME = "name";
+    private static final String FIELD_DEADLINE = "deadline";
+    private static final String FIELD_PRIORITY = "priority";
+
     @Id
     private final String id;
 
+    @NotNull
+    @NotEmpty
+    @Field(FIELD_USER_ID)
+    private final String userId;
+
     @NotEmpty
     @NotNull
-    @Field("name")
+    @Field(FIELD_NAME)
     @Valid
     private String name;
 
-    @Field("deadline")
+    @Field(FIELD_DEADLINE)
     private LocalDate deadline;
 
     @NotNull
-    @Field("priority")
+    @Field(FIELD_PRIORITY)
     @Valid
     private Priority priority;
 
-    public Todo(String id, @NotEmpty @NotNull @Valid String name, LocalDate deadline, @NotNull @Valid Priority priority) {
+    public Todo(String id, @NotNull @NotEmpty String userId, @NotEmpty @NotNull @Valid String name, LocalDate deadline, @NotNull @Valid Priority priority) {
         this.id = id;
+        this.userId = userId;
         this.name = name;
         this.deadline = deadline;
         this.priority = priority;
@@ -65,12 +76,17 @@ public class Todo {
         this.priority = priority;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Todo todo = (Todo) o;
         return Objects.equals(id, todo.id) &&
+                Objects.equals(userId, todo.userId) &&
                 Objects.equals(name, todo.name) &&
                 Objects.equals(deadline, todo.deadline) &&
                 priority == todo.priority;
@@ -78,16 +94,59 @@ public class Todo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, deadline, priority);
+        return Objects.hash(id, userId, name, deadline, priority);
     }
 
     @Override
     public String toString() {
         return "Todo{" +
                 "id='" + id + '\'' +
+                ", userId='" + userId + '\'' +
                 ", name='" + name + '\'' +
                 ", deadline=" + deadline +
                 ", priority=" + priority +
                 '}';
+    }
+
+    public static class Builder {
+        private String id;
+        private String userId;
+        private String name;
+        private LocalDate deadline;
+        private Priority priority;
+
+        public Todo.Builder withId(String id) {
+            this.id = id;
+
+            return this;
+        }
+
+        public Todo.Builder withUserId(String userId) {
+            this.userId = userId;
+
+            return this;
+        }
+
+        public Todo.Builder withName(String name) {
+            this.name = name;
+
+            return this;
+        }
+
+        public Todo.Builder withDeadline(LocalDate deadline) {
+            this.deadline = deadline;
+
+            return this;
+        }
+
+        public Todo.Builder withPriority(Priority priority) {
+            this.priority = priority;
+
+            return this;
+        }
+
+        public Todo build() {
+            return new Todo(id, userId, name, deadline, priority);
+        }
     }
 }

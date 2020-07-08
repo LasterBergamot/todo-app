@@ -1,28 +1,42 @@
-package com.todo.todoapp.service.impl;
+package com.todo.todoapp.service.todo.impl;
 
 import com.todo.todoapp.model.todo.Todo;
-import com.todo.todoapp.repository.TodoRepository;
-import com.todo.todoapp.service.ITodoService;
+import com.todo.todoapp.model.user.User;
+import com.todo.todoapp.repository.todo.TodoRepository;
+import com.todo.todoapp.repository.user.UserRepository;
+import com.todo.todoapp.service.todo.ITodoService;
+import com.todo.todoapp.util.MongoUtil;
+import com.todo.todoapp.util.TodoUtil;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_JSON;
-import static com.todo.todoapp.util.TodoConstants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_ID;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
+import static com.todo.todoapp.util.Constants.COLLECTION_NAME_TODO;
+import static com.todo.todoapp.util.Constants.ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN;
+import static com.todo.todoapp.util.Constants.ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NO_TODO_WAS_FOUND_WITH_THE_GIVEN_ID;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_JSON;
+import static com.todo.todoapp.util.Constants.ERR_MSG_NULL_OR_EMPTY_ID;
+import static com.todo.todoapp.util.Constants.INDEX_NAME_TODO_NAME_INDEX;
+import static com.todo.todoapp.util.Constants.KEY_NAME;
 
 @Service
 @Validated
@@ -31,27 +45,19 @@ public class TodoService implements ITodoService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TodoService.class);
 
     private final TodoRepository todoRepository;
-
-    private final MongoTemplate mongoTemplate;
+    private final UserRepository userRepository;
+    private final MongoUtil mongoUtil;
 
     @Autowired
-    public TodoService(TodoRepository todoRepository, MongoTemplate mongoTemplate) {
+    public TodoService(TodoRepository todoRepository, UserRepository userRepository, MongoUtil mongoUtil) {
         this.todoRepository = todoRepository;
-        this.mongoTemplate = mongoTemplate;
+        this.userRepository = userRepository;
+        this.mongoUtil = mongoUtil;
     }
 
     @PostConstruct
     public void initIndexes() {
-        LOGGER.info("Creating index for the 'name' field of Todo.");
-
-        mongoTemplate
-                .indexOps("Todo")
-                .ensureIndex(
-                        new Index()
-                                .on("name", Sort.DEFAULT_DIRECTION)
-                                .named("Todo_name_index")
-                                .unique()
-                );
+        mongoUtil.createIndex("Creating index for the 'name' field of Todo.", COLLECTION_NAME_TODO, KEY_NAME, INDEX_NAME_TODO_NAME_INDEX);
     }
 
     /**
@@ -64,6 +70,59 @@ public class TodoService implements ITodoService {
         LOGGER.info("Getting all Todos from the database!");
 
         return ResponseEntity.ok(todoRepository.findAll());
+    }
+
+    /**
+     * Return with all of the Todos for the given user.
+     *
+     * @param springSecurityContext - the object which holds the currently logged in user
+     * @return - a ResponseEntity with all of the Todos for the given user
+     *           if the given SecurityContext does not exist, it will return with a ResponseEntity with HttpStatus.BAD_REQUEST (400)
+     *           if no user was found in the database, then it will also return with a ResponseEntity with HttpStatus.NOT_FOUND (404)
+     */
+    @Override
+    public ResponseEntity<Object> getTodos(SecurityContext springSecurityContext) {
+        if (springSecurityContext == null) {
+            return getErrorSpecificResponseEntity(HttpStatus.BAD_REQUEST, ERR_MSG_CURRENTLY_NO_USER_IS_LOGGED_IN);
+        }
+
+        User user = getUserFromDatabase(springSecurityContext);
+
+        if (user == null) {
+            return getErrorSpecificResponseEntity(HttpStatus.NOT_FOUND, ERR_MSG_CURRENTLY_THE_GIVEN_USER_DOES_NOT_EXIST_IN_THE_DATABASE);
+        }
+
+        LOGGER.info("Getting Todos for the given user!");
+
+        return ResponseEntity.ok(todoRepository.findByUserId(user.getId()));
+    }
+
+    private User getUserFromDatabase(SecurityContext springSecurityContext) {
+        User user = null;
+        OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) springSecurityContext.getAuthentication();
+        OAuth2User principal = oAuth2AuthenticationToken.getPrincipal();
+
+        if (principal instanceof OidcUser) {
+            user = handleGoogle(principal);
+        } else if (principal instanceof DefaultOAuth2User) {
+            user = handleGithub(principal);
+        }
+
+        return user;
+    }
+
+    private User handleGoogle(OAuth2User principal) {
+        OidcUser defaultOidcUser = (OidcUser) principal;
+        String googleId = Objects.requireNonNull(defaultOidcUser.getAttribute(ATTRIBUTE_SUB)).toString();
+
+        return userRepository.findByGoogleId(googleId);
+    }
+
+    private User handleGithub(OAuth2User principal) {
+        DefaultOAuth2User defaultOAuth2User = (DefaultOAuth2User) principal;
+        String githubId = Objects.requireNonNull(defaultOAuth2User.getAttribute(ATTRIBUTE_ID)).toString();
+
+        return userRepository.findByGithubId(githubId);
     }
 
     /**
@@ -132,8 +191,7 @@ public class TodoService implements ITodoService {
         ResponseEntity<Object> responseEntity;
 
         if (optionalTodo.isPresent()) {
-            LOGGER.info("Updating Todo!");
-            Todo updatedTodo = updateTodo(optionalTodo.get(), todoFromJSON);
+            Todo updatedTodo = TodoUtil.updateTodo(optionalTodo.get(), todoFromJSON);
 
             responseEntity = ResponseEntity.status(HttpStatus.OK).body(todoRepository.save(updatedTodo));
         } else {
@@ -141,16 +199,6 @@ public class TodoService implements ITodoService {
         }
 
         return responseEntity;
-    }
-
-    //TODO: create a util class for this?
-    //TODO: create a new Todo object instead of modifying the already existing one?
-    private Todo updateTodo(Todo todoFromRepo, Todo todoFromJSON) {
-        todoFromRepo.setName(todoFromJSON.getName());
-        todoFromRepo.setDeadline(todoFromJSON.getDeadline());
-        todoFromRepo.setPriority(todoFromJSON.getPriority());
-
-        return todoFromRepo;
     }
 
     /**
