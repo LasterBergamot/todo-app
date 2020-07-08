@@ -1,25 +1,36 @@
 package com.todo.todoapp.service.user.impl;
 
+import com.todo.todoapp.model.user.User;
 import com.todo.todoapp.repository.user.UserRepository;
 import com.todo.todoapp.util.MongoUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_EMAIL;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_ID;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_LOGIN;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
+import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
 import static com.todo.todoapp.util.Constants.DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NOT_NULL_DATA_PROVIDER;
 import static com.todo.todoapp.util.Constants.DP_GET_USERNAME_NAME_ATTRIBUTE_IS_NULL_DATA_PROVIDER;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_ID_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_LOGIN_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_NAME_ATTRIBUTE_IS_NULL;
+import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_SUB_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.NAME_ANDREW;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -29,6 +40,9 @@ import static org.mockito.Mockito.when;
 
 class UserServiceTest {
 
+    public static final String GOOGLE_ID = "156246724635752711248";
+    public static final String GITHUB_ID = "56322326";
+    public static final String EMAIL = "asd123@asd.com";
     private UserRepository userRepository;
     private MongoUtil mongoUtil;
 
@@ -61,8 +75,7 @@ class UserServiceTest {
         assertEquals(ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL, exception.getMessage());
 
         // VERIFY
-        verifyNoInteractions(userRepository);
-        verifyNoInteractions(mongoUtil);
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     private static Object[][] getUsernameNameAttributeIsNullDataProvider() {
@@ -92,8 +105,7 @@ class UserServiceTest {
 
         // VERIFY
         verify(principal, times(2)).getAttribute(anyString());
-        verifyNoInteractions(userRepository);
-        verifyNoInteractions(mongoUtil);
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     private static Object[][] getUsernameNameAttributeIsNotNullDataProvider() {
@@ -118,8 +130,7 @@ class UserServiceTest {
 
         // VERIFY
         verify(principal, times(2)).getAttribute(anyString());
-        verifyNoInteractions(userRepository);
-        verifyNoInteractions(mongoUtil);
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     /*
@@ -129,157 +140,320 @@ class UserServiceTest {
     @Test
     void test_handleUserShouldThrowIllegalArgumentException_WhenThePrincipalIsNull() {
         // GIVEN
+        OAuth2User principal = null;
 
         // WHEN
+        userService = createUserService();
 
         // THEN
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.handleUser(principal)
+        );
+
+        assertEquals(ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL, exception.getMessage());
 
         // VERIFY
-
-    }
-
-    @Test
-    void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheGivenPrincipalIsNotFromASupportedProvider() {
-        // GIVEN
-
-        // WHEN
-
-        // THEN
-
-        // VERIFY
-
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     @Test
     void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheSubAttributeIsNull_AndTheProviderIsGoogle() {
         // GIVEN
+        OidcUser principal = mock(OidcUser.class);
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_SUB)).thenReturn(null);
+
+        userService = createUserService();
 
         // THEN
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.handleUser(principal)
+        );
+
+        assertEquals(ERR_MSG_THE_PRINCIPAL_S_SUB_ATTRIBUTE_IS_NULL, exception.getMessage());
 
         // VERIFY
-
+        verify(principal, times(1)).getAttribute(anyString());
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     @Test
     void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheEmailAttributeIsNull_AndTheProviderIsGoogle() {
         // GIVEN
+        OidcUser principal = mock(OidcUser.class);
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_SUB)).thenReturn(GOOGLE_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(null);
+
+        userService = createUserService();
 
         // THEN
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.handleUser(principal)
+        );
+
+        assertEquals(ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL, exception.getMessage());
 
         // VERIFY
-
+        verify(principal, times(2)).getAttribute(anyString());
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     @Test
     void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheIdAttributeIsNull_AndTheProviderIsGithub() {
         // GIVEN
+        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(null);
+
+        userService = createUserService();
 
         // THEN
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.handleUser(principal)
+        );
+
+        assertEquals(ERR_MSG_THE_PRINCIPAL_S_ID_ATTRIBUTE_IS_NULL, exception.getMessage());
 
         // VERIFY
-
+        verify(principal, times(1)).getAttribute(anyString());
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     @Test
     void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheEmailAttributeIsNull_AndTheProviderIsGithub() {
         // GIVEN
+        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(GITHUB_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(null);
+
+        userService = createUserService();
 
         // THEN
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.handleUser(principal)
+        );
+
+        assertEquals(ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL, exception.getMessage());
 
         // VERIFY
-
+        verify(principal, times(2)).getAttribute(anyString());
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
+    @Disabled
     @Test
-    void test_handleUserShouldReturnNull_WhenThePrincipalIsNotFromTheAvailableProviders() {
+    void test_handleUserShouldThrowAnIllegalArgumentException_WhenTheGivenPrincipalIsNotFromASupportedProvider() {
         // GIVEN
+        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(GITHUB_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        userService = createUserService();
 
         // THEN
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.handleUser((OAuth2User) principal)
+        );
+
+        assertEquals(ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE, exception.getMessage());
 
         // VERIFY
-
+        verify(principal, times(2)).getAttribute(anyString());
+        verifyNoInteractions(userRepository, mongoUtil);
     }
 
     @Test
     void test_handleUserShouldReturnANewUser_WhenNoUserExistsWithTheGivenEmail_AndTheProviderIsGoogle() {
         // GIVEN
+        OidcUser principal = mock(OidcUser.class);
+        User user = new User.Builder()
+                .withEmail(EMAIL)
+                .withGoogleId(GOOGLE_ID)
+                .build();
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_SUB)).thenReturn(GOOGLE_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(null);
+        when(userRepository.save(user)).thenReturn(user);
+
+        userService = createUserService();
 
         // THEN
+        assertEquals(user, userService.handleUser(principal));
 
         // VERIFY
-
+        verify(principal, times(4)).getAttribute(anyString());
+        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoInteractions(mongoUtil);
     }
 
     @Test
     void test_handleUserShouldReturnAnAlreadyExistingUser_WhenAUserExistsWithTheGivenEmail_AndTheProviderIsGoogle_AndTheGoogleIdIsStored() {
         // GIVEN
+        OidcUser principal = mock(OidcUser.class);
+        User user = new User.Builder()
+                .withEmail(EMAIL)
+                .withGoogleId(GOOGLE_ID)
+                .build();
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_SUB)).thenReturn(GOOGLE_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+        when(userRepository.findByGoogleId(GOOGLE_ID)).thenReturn(user);
+
+        userService = createUserService();
 
         // THEN
+        assertEquals(user, userService.handleUser(principal));
 
         // VERIFY
-
+        verify(principal, times(4)).getAttribute(anyString());
+        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(userRepository, times(1)).findByGoogleId(anyString());
+        verifyNoInteractions(mongoUtil);
     }
 
     @Test
     void test_handleUserShouldReturnAnAlreadyExistingUser_WhenAUserAlreadyExistsWithTheGivenEmail_AndTheProviderIsGoogle_AndTheGoogleIdIsNotStored() {
         // GIVEN
+        OidcUser principal = mock(OidcUser.class);
+        User storedUser = new User.Builder()
+                .withEmail(EMAIL)
+                .build();
+
+        User returnedUser = new User.Builder()
+                .withEmail(EMAIL)
+                .withGoogleId(GOOGLE_ID)
+                .build();
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_SUB)).thenReturn(GOOGLE_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(storedUser);
+        when(userRepository.findByGoogleId(GOOGLE_ID)).thenReturn(null);
+        when(userRepository.save(returnedUser)).thenReturn(returnedUser);
+
+        userService = createUserService();
 
         // THEN
+        assertEquals(storedUser, userService.handleUser(principal));
 
         // VERIFY
-
+        verify(principal, times(4)).getAttribute(anyString());
+        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(userRepository, times(1)).findByGoogleId(anyString());
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoInteractions(mongoUtil);
     }
 
     @Test
     void test_handleUserShouldReturnANewUser_WhenNoUserExistsWithTheGivenEmail_AndTheProviderIsGithub() {
         // GIVEN
+        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
+        User user = new User.Builder()
+                .withEmail(EMAIL)
+                .withGithubId(GITHUB_ID)
+                .build();
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(GITHUB_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(null);
+        when(userRepository.save(user)).thenReturn(user);
+
+        userService = createUserService();
 
         // THEN
+        assertEquals(user, userService.handleUser(principal));
 
         // VERIFY
-
+        verify(principal, times(4)).getAttribute(anyString());
+        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoInteractions(mongoUtil);
     }
 
     @Test
     void test_handleUserShouldReturnAnAlreadyExistingUser_WhenAUserExistsWithTheGivenEmail_AndTheProviderIsGithub_AndTheGithubIdIsStored() {
         // GIVEN
+        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
+        User user = new User.Builder()
+                .withEmail(EMAIL)
+                .withGithubId(GITHUB_ID)
+                .build();
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(GITHUB_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+        when(userRepository.findByGithubId(GITHUB_ID)).thenReturn(user);
+
+        userService = createUserService();
 
         // THEN
+        assertEquals(user, userService.handleUser(principal));
 
         // VERIFY
-
+        verify(principal, times(4)).getAttribute(anyString());
+        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(userRepository, times(1)).findByGithubId(anyString());
+        verifyNoInteractions(mongoUtil);
     }
 
     @Test
     void test_handleUserShouldReturnAnAlreadyExistingUser_WhenAUserAlreadyExistsWithTheGivenEmail_AndTheProviderIsGithub_AndTheGithubIdIsNotStored() {
         // GIVEN
+        DefaultOAuth2User principal = mock(DefaultOAuth2User.class);
+        User storedUser = new User.Builder()
+                .withEmail(EMAIL)
+                .build();
+
+        User returnedUser = new User.Builder()
+                .withEmail(EMAIL)
+                .withGithubId(GITHUB_ID)
+                .build();
 
         // WHEN
+        when(principal.getAttribute(ATTRIBUTE_ID)).thenReturn(GITHUB_ID);
+        when(principal.getAttribute(ATTRIBUTE_EMAIL)).thenReturn(EMAIL);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(storedUser);
+        when(userRepository.findByGithubId(GITHUB_ID)).thenReturn(null);
+        when(userRepository.save(returnedUser)).thenReturn(returnedUser);
+
+        userService = createUserService();
 
         // THEN
+        assertEquals(storedUser, userService.handleUser(principal));
 
         // VERIFY
-
+        verify(principal, times(4)).getAttribute(anyString());
+        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(userRepository, times(1)).findByGithubId(anyString());
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoInteractions(mongoUtil);
     }
 
     private UserService createUserService() {

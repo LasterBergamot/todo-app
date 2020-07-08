@@ -21,7 +21,6 @@ import static com.todo.todoapp.util.Constants.ATTRIBUTE_NAME;
 import static com.todo.todoapp.util.Constants.ATTRIBUTE_SUB;
 import static com.todo.todoapp.util.Constants.COLLECTION_NAME_USER;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PRINCIPAL_IS_NULL;
-import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_PROVIDER_IS_NOT_SUPPORTED;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_GIVEN_USER_COULD_NOT_BE_SAVED_TO_ANY_AVAILABLE_SERVICE;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_EMAIL_ATTRIBUTE_IS_NULL;
 import static com.todo.todoapp.util.Constants.ERR_MSG_THE_PRINCIPAL_S_ID_ATTRIBUTE_IS_NULL;
@@ -99,8 +98,6 @@ public class UserService implements IUserService {
             checkGoogleAttributes((OidcUser) principal);
         } else if (principal instanceof DefaultOAuth2User) {
             checkGithubAttributes((DefaultOAuth2User) principal);
-        } else {
-            throwIllegalArgumentException(ERR_MSG_THE_GIVEN_PROVIDER_IS_NOT_SUPPORTED);
         }
     }
 
@@ -139,11 +136,12 @@ public class UserService implements IUserService {
     }
 
     private User handleGoogleLogin(OidcUser oidcUser) {
-        User returnedUser;
         String id = oidcUser.getAttribute(ATTRIBUTE_SUB).toString();
         String email = oidcUser.getAttribute(ATTRIBUTE_EMAIL).toString();
 
-        if (userRepository.findByEmail(email) == null) {
+        User returnedUser = userRepository.findByEmail(email);
+
+        if (returnedUser == null) {
             User user = new User.Builder()
                     .withEmail(email)
                     .withGoogleId(id)
@@ -151,8 +149,6 @@ public class UserService implements IUserService {
 
             returnedUser = userRepository.save(user);
         } else {
-            returnedUser = userRepository.findByEmail(email);
-
             if (userRepository.findByGoogleId(id) == null) {
                 returnedUser.setGoogleId(id);
 
@@ -164,11 +160,12 @@ public class UserService implements IUserService {
     }
 
     private User handleGithubLogin(DefaultOAuth2User defaultOAuth2User) {
-        User returnedUser;
         String id = defaultOAuth2User.getAttribute(ATTRIBUTE_ID).toString();
         String email = defaultOAuth2User.getAttribute(ATTRIBUTE_EMAIL).toString();
 
-        if (userRepository.findByEmail(email) == null) {
+        User returnedUser = userRepository.findByEmail(email);
+
+        if (returnedUser == null) {
             User user = new User.Builder()
                     .withEmail(email)
                     .withGithubId(id)
@@ -176,8 +173,6 @@ public class UserService implements IUserService {
 
             returnedUser = userRepository.save(user);
         } else {
-            returnedUser = userRepository.findByEmail(email);
-
             if (userRepository.findByGithubId(id) == null) {
                 returnedUser.setGithubId(id);
 
